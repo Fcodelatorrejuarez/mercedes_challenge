@@ -814,30 +814,54 @@
 
 ### 10.6 Vista agregada por cliente (data/processed/clientes.csv)
 
-|                                     |      count |   unique |      mean |       std |       min |       25% |       50% |       75% |        max |
-|:------------------------------------|-----------:|---------:|----------:|----------:|----------:|----------:|----------:|----------:|-----------:|
-| age_range                           | 173,456.00 |     6.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| gender_derived                      | 173,456.00 |     3.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| country_code                        | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| months_as_mb_customer               | 173,456.00 |   nan    |     33.90 |     20.73 |      0.00 |     18.00 |     36.00 |     47.00 |     120.00 |
-| months_is_36_spike                  | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| currently_connected_vehicles        | 173,456.00 |   nan    |      1.04 |      0.88 |      0.00 |      1.00 |      1.00 |      1.00 |      21.00 |
-| finance_leasing_status              | 173,456.00 |     4.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| consent_phone_communication_channel | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| consent_epost_communication_channel | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| consent_post_communication_channel  | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| purchasing_power_per_inhabitant_eur | 173,456.00 |   nan    | 46,893.74 | 17,276.80 | 19,701.53 | 31,940.06 | 46,636.14 | 54,450.82 | 148,353.74 |
-| population                          | 173,456.00 |   nan    | 20,351.39 | 37,662.54 |     25.00 |  3,114.00 |  7,354.00 | 18,605.00 | 220,794.00 |
-| socio_imputed                       | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| zip_imputed                         | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| n_relaciones                        | 173,456.00 |   nan    |      1.75 |      5.51 |      1.00 |      1.00 |      1.00 |      2.00 |     561.00 |
-| is_b2b                              | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| share_owner                         | 173,456.00 |   nan    |      0.88 |      0.30 |      0.00 |      1.00 |      1.00 |      1.00 |       1.00 |
-| visitas_taller_total                | 173,456.00 |   nan    |      3.06 |      4.70 |      0.00 |      0.00 |      2.00 |      4.00 |     206.00 |
-| edad_vehiculo_actual_media          | 155,408.00 |   nan    |      4.72 |      3.01 |      0.04 |      2.33 |      4.33 |      6.71 |      39.75 |
-| share_electrificado_actual          | 155,408.00 |   nan    |      0.25 |      0.42 |      0.00 |      0.00 |      0.00 |      0.50 |       1.00 |
-| has_telemetry                       | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| trip_distance_average               | 173,456.00 |   nan    |      9.32 |      9.51 |      0.00 |      0.00 |      9.58 |     15.22 |      49.39 |
-| operating_hours_total               | 173,456.00 |   nan    |    369.43 |    532.59 |      0.00 |      0.00 |    142.06 |    530.16 |   3,394.76 |
-| fuel_consumption_average            | 173,456.00 |   nan    |      4.50 |      4.47 |      0.00 |      0.00 |      5.46 |      8.14 |      19.00 |
-| speed_average                       | 173,456.00 |   nan    |     29.32 |     25.71 |      0.00 |      0.00 |     39.39 |     50.45 |      80.50 |
+|                                     |      count |   unique |       mean |       std |       min |       25% |        50% |        75% |        max |
+|:------------------------------------|-----------:|---------:|-----------:|----------:|----------:|----------:|-----------:|-----------:|-----------:|
+| age_range                           | 173,456.00 |     6.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| gender_derived                      | 173,456.00 |     3.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| country_code                        | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| months_as_mb_customer               | 173,456.00 |   nan    |      33.90 |     20.73 |      0.00 |     18.00 |      36.00 |      47.00 |     120.00 |
+| months_is_36_spike                  | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| currently_connected_vehicles        | 173,456.00 |   nan    |       1.04 |      0.88 |      0.00 |      1.00 |       1.00 |       1.00 |      21.00 |
+| finance_leasing_status              | 173,456.00 |     4.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| consent_phone_communication_channel | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| consent_epost_communication_channel | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| consent_post_communication_channel  | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| purchasing_power_per_inhabitant_eur | 173,456.00 |   nan    |  46,893.74 | 17,276.80 | 19,701.53 | 31,940.06 |  46,636.14 |  54,450.82 | 148,353.74 |
+| purchasing_power_per_household_eur  | 173,456.00 |   nan    | 105,654.47 | 41,831.31 | 45,087.34 | 72,163.79 | 102,966.68 | 123,066.22 | 342,497.95 |
+| population                          | 173,456.00 |   nan    |  20,351.39 | 37,662.54 |     25.00 |  3,114.00 |   7,354.00 |  18,605.00 | 220,794.00 |
+| socio_imputed                       | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| zip_imputed                         | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| n_relaciones                        | 173,456.00 |   nan    |       1.75 |      5.51 |      1.00 |      1.00 |       1.00 |       2.00 |     561.00 |
+| n_vehiculos_distintos               | 173,456.00 |   nan    |       1.75 |      5.51 |      1.00 |      1.00 |       1.00 |       2.00 |     561.00 |
+| n_relaciones_historicas             | 173,456.00 |   nan    |       0.71 |      5.22 |      0.00 |      0.00 |       0.00 |       1.00 |     547.00 |
+| tiene_vehiculo_actual               | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| is_b2b                              | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| share_owner                         | 173,456.00 |   nan    |       0.88 |      0.30 |      0.00 |      1.00 |       1.00 |       1.00 |       1.00 |
+| rol_principal                       | 173,456.00 |     5.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| meses_desde_ultima_matriculacion    | 173,456.00 |   nan    |      54.96 |     36.32 |      0.43 |     25.76 |      49.74 |      79.41 |     477.01 |
+| edad_vehiculo_media                 | 173,456.00 |   nan    |       4.83 |      3.02 |      0.04 |      2.44 |       4.50 |       6.83 |      39.75 |
+| edad_vehiculo_min                   | 173,456.00 |   nan    |       4.65 |      3.05 |      0.04 |      2.21 |       4.24 |       6.69 |      39.75 |
+| visitas_taller_total                | 173,456.00 |   nan    |       3.06 |      4.70 |      0.00 |      0.00 |       2.00 |       4.00 |     206.00 |
+| visitas_por_vehiculo                | 173,456.00 |   nan    |       2.09 |      2.35 |      0.00 |      0.00 |       1.50 |       3.00 |      36.33 |
+| share_compacto                      | 173,456.00 |   nan    |       0.36 |      0.47 |      0.00 |      0.00 |       0.00 |       1.00 |       1.00 |
+| share_medio                         | 173,456.00 |   nan    |       0.21 |      0.40 |      0.00 |      0.00 |       0.00 |       0.00 |       1.00 |
+| share_suv                           | 173,456.00 |   nan    |       0.27 |      0.43 |      0.00 |      0.00 |       0.00 |       1.00 |       1.00 |
+| share_lujo                          | 173,456.00 |   nan    |       0.04 |      0.18 |      0.00 |      0.00 |       0.00 |       0.00 |       1.00 |
+| share_deportivo                     | 173,456.00 |   nan    |       0.01 |      0.10 |      0.00 |      0.00 |       0.00 |       0.00 |       1.00 |
+| share_furgoneta                     | 173,456.00 |   nan    |       0.11 |      0.30 |      0.00 |      0.00 |       0.00 |       0.00 |       1.00 |
+| familia_principal                   | 173,456.00 |    17.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| share_amg                           | 173,456.00 |   nan    |       0.13 |      0.33 |      0.00 |      0.00 |       0.00 |       0.00 |       1.00 |
+| share_4matic                        | 173,456.00 |   nan    |       0.61 |      0.47 |      0.00 |      0.00 |       1.00 |       1.00 |       1.00 |
+| share_bev                           | 173,456.00 |   nan    |       0.10 |      0.29 |      0.00 |      0.00 |       0.00 |       0.00 |       1.00 |
+| share_phev                          | 173,456.00 |   nan    |       0.14 |      0.34 |      0.00 |      0.00 |       0.00 |       0.00 |       1.00 |
+| share_mhev                          | 173,456.00 |   nan    |       0.18 |      0.38 |      0.00 |      0.00 |       0.00 |       0.00 |       1.00 |
+| share_combustion                    | 173,456.00 |   nan    |       0.58 |      0.48 |      0.00 |      0.00 |       1.00 |       1.00 |       1.00 |
+| share_electrificado                 | 173,456.00 |   nan    |       0.24 |      0.42 |      0.00 |      0.00 |       0.00 |       0.50 |       1.00 |
+| share_diesel                        | 173,456.00 |   nan    |       0.44 |      0.49 |      0.00 |      0.00 |       0.00 |       1.00 |       1.00 |
+| has_telemetry                       | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
+| trip_distance_average               | 173,456.00 |   nan    |       9.32 |      9.51 |      0.00 |      0.00 |       9.58 |      15.22 |      49.39 |
+| operating_hours_total               | 173,456.00 |   nan    |     369.43 |    532.59 |      0.00 |      0.00 |     142.06 |     530.16 |   3,394.76 |
+| fuel_consumption_average            | 173,456.00 |   nan    |       4.50 |      4.47 |      0.00 |      0.00 |       5.46 |       8.14 |      19.00 |
+| speed_average                       | 173,456.00 |   nan    |      29.32 |     25.71 |      0.00 |      0.00 |      39.39 |      50.45 |      80.50 |
+| trip_distance_all_counter           | 173,456.00 |   nan    |   1,491.26 |  2,079.87 |      0.00 |      0.00 |     745.00 |   2,262.00 |  54,034.00 |
+| engine_imputed_share                | 173,456.00 |   nan    |       0.43 |      0.48 |      0.00 |      0.00 |       0.00 |       1.00 |       1.00 |
