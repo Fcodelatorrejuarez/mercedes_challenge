@@ -1,19 +1,35 @@
-"""
-Reto básico 1 - Exploración y calidad de datos (EDA)
-III Malackathon 2026 - Mercedes-Benz "Clustering the Star"
+# ---
+# jupyter:
+#   jupytext:
+#     formats: ipynb,py:percent
+#   kernelspec:
+#     display_name: Python 3
+#     language: python
+#     name: python3
+# ---
 
-Script reproducible que genera todas las tablas y figuras citadas en
-eda/EDA_reto1.md y aplica la propuesta de limpieza documentada.
+# %% [markdown]
+# # Reto básico 1: exploración y calidad de datos (EDA)
+#
+# **III Malackathon 2026 · Mercedes-Benz Group Services Madrid · "Clustering the Star"**
+#
+# Este notebook es el entregable del reto 1 definido en `Especificaciones_proyecto.md`. Incluye:
+#
+# 1. **Estadísticos descriptivos** de las variables principales (§5, §6).
+# 2. **Valores nulos e inconsistencias**, con el tratamiento aplicado y justificado (§3, §4, §9, §10).
+# 3. **Distribuciones** de las variables clave (§6–§8).
+# 4. **Exclusión justificada** de identificadores y metadatos (§9.1).
+#
+# El tratamiento de nulos parte de la decisión del equipo (`Descripcion_uso_de_datos`), con las
+# correcciones necesarias para que el dataset resultante sea **coherente** (§9–§10).
+# Las conclusiones breves están en `eda/Resumen_reto1.md`.
+#
+# **Cómo ejecutarlo:** desde la raíz del repositorio, con el entorno de `requirements.txt`, abrir y ejecutar
+# este notebook. Alternativamente, `python eda/eda_reto1.py` produce las mismas salidas: figuras en
+# `eda/figures/`, tablas en `eda/outputs/resultados.md` y datos tratados en `data/processed/`.
+# El `.py` y el `.ipynb` están emparejados con jupytext.
 
-Uso (desde la raíz del repositorio):
-    python eda/eda_reto1.py
-
-Salidas:
-    eda/figures/*.png               -> figuras del informe
-    eda/outputs/resultados.md       -> todas las tablas en Markdown
-    data/processed/relaciones_limpio.parquet  -> dataset cliente-vehículo tratado
-    data/processed/clientes.parquet           -> vista agregada a nivel cliente
-"""
+# %%
 from __future__ import annotations
 
 import re
@@ -21,15 +37,25 @@ from pathlib import Path
 
 import matplotlib
 
-matplotlib.use("Agg")
+try:  # dentro de Jupyter las figuras se muestran en línea; como script se guardan sin ventana
+    get_ipython()  # noqa: F821
+    IN_NOTEBOOK = True
+except NameError:
+    IN_NOTEBOOK = False
+    matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# --------------------------------------------------------------------------
-# Rutas y constantes
-# --------------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parents[1]
+if IN_NOTEBOOK:
+    from IPython.display import Markdown, display
+
+pd.set_option("display.max_columns", 60)
+pd.set_option("display.width", 200)
+
+# Rutas: funciona tanto desde la raíz del repo como desde eda/
+ROOT = next(p for p in [Path.cwd(), *Path.cwd().parents]
+            if (p / "data" / "datos_reto_mercedes_benz_malackathon.csv").exists())
 RAW = ROOT / "data" / "datos_reto_mercedes_benz_malackathon.csv"
 FIG = ROOT / "eda" / "figures"
 OUT = ROOT / "eda" / "outputs"
@@ -37,8 +63,7 @@ PROC = ROOT / "data" / "processed"
 for p in (FIG, OUT, PROC):
     p.mkdir(parents=True, exist_ok=True)
 
-# Fecha de referencia del análisis: la fecha de registro máxima del fichero es
-# 2026-10-02, así que el extracto es de principios de octubre de 2026.
+# Fecha de referencia: la matriculación más reciente del fichero es del 2026-10-02.
 REF_DATE = pd.Timestamp("2026-10-15")
 
 STR_COLS = {c: str for c in ["client_id", "vehicle_id", "model_series", "zipcode",
@@ -59,9 +84,7 @@ VEHICLE_COLS = ["model_series", "vehicle_type", "model_class", "product_group",
                 "engine_concept", "fuel_type", "date_of_first_registration"]
 AGE_ORDER = ["<25", "25-34", "35-44", "45-54", "55-64", "65+"]
 
-# --------------------------------------------------------------------------
-# Estilo de gráficos (paleta de referencia validada, ver skill dataviz)
-# --------------------------------------------------------------------------
+# Estilo de gráficos (paleta categórica validada para daltonismo)
 SURFACE, INK, INK2, MUTED, GRID, AXIS = "#fcfcfb", "#0b0b0b", "#52514e", "#898781", "#e1e0d9", "#c3c2b7"
 CAT = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
 BLUE = CAT[0]
@@ -81,8 +104,11 @@ plt.rcParams.update({
 
 
 def save(fig, name):
+    """Guarda la figura en eda/figures y, en el notebook, la muestra."""
     fig.tight_layout()
     fig.savefig(FIG / name, dpi=130, bbox_inches="tight")
+    if IN_NOTEBOOK:
+        plt.show()
     plt.close(fig)
 
 
@@ -105,26 +131,37 @@ def pct(x, d=1):
     return f"{100 * x:.{d}f} %"
 
 
-# --------------------------------------------------------------------------
-# Salida de tablas a Markdown
-# --------------------------------------------------------------------------
+# Las tablas se muestran en el notebook y además se acumulan en eda/outputs/resultados.md
 _md: list[str] = []
 
 
 def md(title: str, obj=None, floatfmt=",.2f", index=True):
-    _md.append(f"\n### {title}\n")
-    if obj is None:
-        return
-    if isinstance(obj, pd.Series):
-        obj = obj.to_frame()
-    _md.append(obj.to_markdown(floatfmt=floatfmt, index=index))
-    _md.append("")
+    block = [f"\n### {title}\n"]
+    if obj is not None:
+        if isinstance(obj, pd.Series):
+            obj = obj.to_frame()
+        block += [obj.to_markdown(floatfmt=floatfmt, index=index), ""]
+    _md.extend(block)
+    if IN_NOTEBOOK:
+        display(Markdown("\n".join(block)))
 
 
 def note(text: str):
     _md.append(text + "\n")
+    if IN_NOTEBOOK:
+        display(Markdown(text))
 
+# %%
 
+# %% [markdown]
+# ## 1. Carga y estructura
+#
+# El CSV tiene 302.850 filas y 39 columnas. `zipcode`, `model_series` y las columnas `*_mode` se leen como texto:
+# son códigos o listas, y con la inferencia automática `zipcode` sale con tipos mixtos porque hay CP como `A-2100`.
+# La primera columna (`Unnamed: 0`) es un índice de pandas exportado. No hay filas duplicadas y el par
+# (`client_id`, `vehicle_id`) es único.
+
+# %%
 # ==========================================================================
 # 1. CARGA Y ESTRUCTURA
 # ==========================================================================
@@ -148,6 +185,14 @@ dtypes = pd.DataFrame({"dtype pandas": df.dtypes.astype(str),
                        "ejemplo": df.apply(lambda s: s.dropna().iloc[0] if s.notna().any() else None)})
 md("1.2 Tipos, cardinalidad y nulos por columna", dtypes, floatfmt=".2f")
 
+
+# %% [markdown]
+# ## 2. Granularidad: qué es cada fila
+#
+# **Cada fila es una relación cliente–vehículo, no un cliente.** Se comprueba qué atributos son constantes
+# por cliente y cuáles por vehículo.
+
+# %%
 # ==========================================================================
 # 2. GRANULARIDAD
 # ==========================================================================
@@ -186,6 +231,19 @@ note(f"- En clientes con >20 relaciones solo el **{pct(hv.is_current_vehicle.mea
 md("2.4 role vs role_type", pd.crosstab(df.role, df.role_type, margins=True))
 md("2.5 role vs is_current_vehicle", pd.crosstab(df.role, df.is_current_vehicle, margins=True))
 
+
+# %% [markdown]
+# **Lectura:**
+#
+# - Los atributos de cliente (edad, país, consentimientos, CP, socio-demografía) y los de vehículo (serie, motor,
+#   fecha) son **100 % consistentes** entre filas. Las visitas al taller y la telemetría varían por relación.
+# - 833 "clientes" tienen más de 20 relaciones. Suman el 16 % de las filas y solo el 10 % de sus vehículos es actual:
+#   probablemente son concesionarios, flotas o rent-a-car.
+# - `role_type = B2B` ⇔ `role = DRIVER` en el 100 % de los casos.
+#
+# → **El clustering debe hacerse sobre una vista agregada por cliente.**
+
+# %%
 fig, axes = plt.subplots(1, 2, figsize=(10, 3.4))
 bins = [1, 2, 3, 4, 5, 6, 11, 21, 51, 101, 600]
 labels = ["1", "2", "3", "4", "5", "6-10", "11-20", "21-50", "51-100", ">100"]
@@ -207,6 +265,14 @@ for i, v in enumerate(cntv.values):
     axes[1].text(i, v * 1.15, f"{v:,}", ha="center", fontsize=7, color=INK2)
 save(fig, "fig01_granularidad.png")
 
+
+# %% [markdown]
+# ## 3. Valores nulos
+#
+# Los nulos aparecen **en bloques** (telemetría, motorización, socio-demografía). Eso apunta a que su origen está
+# en las fuentes de datos y no en errores de captura fila a fila.
+
+# %%
 # ==========================================================================
 # 3. VALORES NULOS
 # ==========================================================================
@@ -242,6 +308,15 @@ ax.set_xlabel("4.000 filas de muestra (ordenadas por presencia de telemetría y 
 ax.set_title("Mapa de nulos: azul = dato presente, gris = nulo")
 save(fig, "fig03_mapa_nulos.png")
 
+
+# %% [markdown]
+# ### 3.1 Telemetría: mecanismo de ausencia
+#
+# El 52 % de las filas no tiene ninguna telemetría. La ausencia depende del rol, de si la relación es actual y de
+# la antigüedad del coche: los anteriores a 2012 casi no tienen datos y los de 2026 aún no los han acumulado. Es una
+# ausencia **estructural (MNAR)**: rellenarla con la media inventaría comportamiento de conducción.
+
+# %%
 # Patrones del bloque de telemetría
 pat = df[TELEMETRY].notna().astype(int).astype(str).agg("".join, axis=1)
 patt = pat.value_counts().head(8).rename("filas").to_frame()
@@ -289,6 +364,19 @@ for ax in axes:
 fig.suptitle("% de filas con algún dato de telemetría", x=0.01, ha="left", fontsize=11, fontweight="bold")
 save(fig, "fig04_disponibilidad_telemetria.png")
 
+
+# %% [markdown]
+# ### 3.2 Motorización, género y socio-demografía
+#
+# - `engine_concept` (44 % nulo) y `fuel_type` (59 %) **nunca se contradicen**, y cuando falta el motor falta
+#   también el combustible. La ausencia depende de la antigüedad y del producto (smart: 100 %). La nomenclatura
+#   comercial (`EQ…`, `… e`, `… d`) permite recuperar buena parte de la información.
+# - El género desconocido se concentra en usuarios secundarios (TEMP_USER, USER) y en los extremos de edad:
+#   es un nulo **no aleatorio**.
+# - Socio-demografía: cada (país, CP) tiene un único valor y **ningún CP mezcla filas con y sin dato**. 993 CP
+#   existen en AT y en CH a la vez, así que la clave tiene que ser (país, CP).
+
+# %%
 # Nulos de motorización / combustible por año de matriculación
 eng_year = df[df.reg_year >= 2009].groupby("reg_year").agg(
     filas=("reg_date", "size"),
@@ -320,6 +408,14 @@ md("3.6 % nulos por país", df.groupby("country_code")[["gender_derived", "zipco
                                                        "fuel_type", "has_telemetry"]]
    .agg(lambda s: (s.isna() if s.name != "has_telemetry" else ~s).mean() * 100), floatfmt=".2f")
 
+
+# %% [markdown]
+# ## 4. Inconsistencias y anomalías
+#
+# Se buscan relaciones deterministas (columnas que son copia de otras), taxonomías solapadas, valores imposibles
+# y artefactos.
+
+# %%
 # ==========================================================================
 # 4. INCONSISTENCIAS Y ANOMALÍAS
 # ==========================================================================
@@ -338,6 +434,15 @@ note(f"- `role_type` = B2B ⇔ `role` = DRIVER en el **100 %** de filas (ver 2.4
 ms_conf = (df.dropna(subset=["model_class"]).groupby("model_series").model_class.nunique() > 1).sum()
 note(f"- `model_series` → `model_class` es una función: series con >1 clase = **{ms_conf}**.")
 
+
+# %% [markdown]
+# **Redundancias encontradas:** PA total = PA/hab × población / 1e6 y PA/hogar = PA total / hogares (error < 0,1 %);
+# población ↔ hogares (ρ = 0,998); `model_series` → `model_class` es una función exacta.
+#
+# A continuación: taxonomía de `model_class` (etiquetas solapadas de distintas épocas y series nuevas de 2026 sin clase),
+# fechas y antigüedad como cliente.
+
+# %%
 # 4.2 Taxonomía de model_class
 mc = df.model_class.value_counts(dropna=False)
 md("4.1 model_class (filas) - taxonomía solapada", mc.rename("filas"))
@@ -384,6 +489,22 @@ ccv = cl0.set_index("client_id").currently_connected_vehicles
 note(f"- `currently_connected_vehicles` = nº de filas con `is_current_vehicle` = True del cliente en el **{pct((ccv == ncur[ccv.index]).mean(), 3)}** "
      f"de clientes (discrepancias: {(ccv != ncur[ccv.index]).sum()}). Clientes sin ningún vehículo actual: **{(ncur == 0).sum():,}** ({pct((ncur == 0).mean())}).")
 
+
+# %% [markdown]
+# **Lectura de lo anterior:**
+#
+# - `months_as_mb_customer` tiene un **pico artificial en 36 meses**: el 12 % de los clientes, 8 veces más que los
+#   meses vecinos. Su máximo es exactamente 120.
+# - `currently_connected_vehicles` cuadra con `is_current_vehicle` en el 99,998 % de los clientes. El 10,4 % de los
+#   clientes no tiene ningún vehículo actual.
+#
+# ### 4.1 Telemetría: valores imposibles y artefactos
+#
+# Hay velocidades medias por debajo de 1 km/h, horas a 0, contadores a 0 con métricas informadas y valores en los
+# topes del sensor. Las medianas y modas son marcas de clase de **dos esquemas de bins distintos**, y las modas son
+# texto con empates.
+
+# %%
 # 4.6 Telemetría: anomalías
 anom = pd.DataFrame({
     "regla": [
@@ -421,6 +542,15 @@ note("- Son marcas de clase de histogramas: conviven **dos esquemas de bins** (1
      "probablemente por distintas generaciones de la unidad telemática. `speed_median` incluye el artefacto de coma flotante 220.00000000000003.")
 md("4.5 Consumo medio por fuel_type (l/100 km)", df.groupby(df.fuel_type.fillna("<NA>")).fuel_consumption_average.describe(), floatfmt=",.2f")
 
+
+# %% [markdown]
+# ## 5. Estadísticos descriptivos
+#
+# A nivel fila (relación). Las variables de uso y de tamaño de zona tienen colas largas (asimetría de 3 a 8), así que
+# K-Means necesitará transformación logarítmica o winsorización antes de escalar. `currently_connected_vehicles`
+# sale inflado a nivel fila por los clientes con muchas filas: la media es 2,15 por fila frente a 1,04 por cliente.
+
+# %%
 # ==========================================================================
 # 5. ESTADÍSTICOS DESCRIPTIVOS
 # ==========================================================================
@@ -450,6 +580,11 @@ cat_desc = pd.DataFrame({
     "% nulos": df[cat_cols].isna().mean() * 100})
 md("5.3 Descriptivos categóricos (nivel fila)", cat_desc, floatfmt=".2f")
 
+
+# %% [markdown]
+# ## 6. Perfil del cliente (una fila por cliente, n = 173.456)
+
+# %%
 # ==========================================================================
 # 6. VISTA A NIVEL CLIENTE
 # ==========================================================================
@@ -493,6 +628,18 @@ md("6.8 Poder adquisitivo por habitante (mediana €) por país y edad",
 note(f"- Clientes con algún vehículo electrificado (BEV/PHEV) actual: **{pct(cl.tiene_electrificado_actual.fillna(False).mean())}**; "
      f"clientes multi-vehículo (≥2 actuales): **{pct((cl.n_vehiculos_actuales >= 2).mean())}**; B2B: **{pct(cl.es_b2b.mean(), 2)}**.")
 
+
+# %% [markdown]
+# **Lectura:**
+#
+# - La base es **madura**: el 61 % tiene 45 años o más.
+# - Género: 65 % hombres, 18 % mujeres y 17 % desconocido. País: 66 % Suiza.
+# - El **81 % tiene un único vehículo conectado**.
+# - El 71 % no ha usado nunca leasing. El leasing llega al 29 % en Suiza frente al 13 % en Austria, con un pico del
+#   33 % entre los 35 y los 44 años.
+# - El 81 % acepta todos los canales de contacto.
+
+# %%
 # Figuras demográficas
 fig, axes = plt.subplots(2, 2, figsize=(10, 6.4))
 a = cl.age_range.value_counts().reindex(AGE_ORDER)
@@ -542,6 +689,16 @@ ax.set_title("Financiación / leasing por rango de edad")
 ax.legend(ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.17))
 save(fig, "fig07_financiacion_edad.png")
 
+
+# %% [markdown]
+# ## 7. Vehículo
+#
+# - Dominan GLC, C, A y B/GLA/GLB. El 59 % es 4MATIC, el 13 % es AMG y el 14 % son furgonetas.
+# - La electrificación se acelera: los BEV pasan del 2,5 % de las matriculaciones de 2019 al 37,5 % de las de 2026.
+#   Austria está más electrificada que Suiza.
+# - Las visitas en garantía crecen hasta los 4–5 años de antigüedad.
+
+# %%
 # ==========================================================================
 # 7. VEHÍCULO
 # ==========================================================================
@@ -595,6 +752,16 @@ md("7.4 Señales de gama extraíbles de vehicle_type", flags, floatfmt=".2f")
 md("7.5 engine_concept por país (% fila, sobre conocidos)",
    pd.crosstab(df.country_code, df.engine_concept, normalize="index").mul(100), floatfmt=".1f")
 
+
+# %% [markdown]
+# ## 8. Socio-demografía, uso y correlaciones
+#
+# - El poder adquisitivo depende sobre todo del país: mediana de 30 k€ por habitante en AT frente a 51 k€ en CH.
+#   Conviene estandarizarlo dentro de cada país.
+# - Uso típico: trayectos de 14 km a 49 km/h y unas 400 h acumuladas.
+# - El consumo es coherente con el combustible: diésel < gasolina < súper plus (AMG).
+
+# %%
 # ==========================================================================
 # 8. SOCIO-DEMOGRAFÍA Y TELEMETRÍA: DISTRIBUCIONES
 # ==========================================================================
@@ -644,6 +811,16 @@ ax.set_xlabel("l/100 km (sin outliers)"); ax.grid(axis="y", visible=False)
 ax.set_title("Consumo medio por tipo de combustible")
 save(fig, "fig13_consumo_por_combustible.png")
 
+
+# %% [markdown]
+# ### 8.1 Correlaciones
+#
+# Hay bloques redundantes (|ρ| ≥ 0,93): población ↔ hogares ↔ PA total, PA/habitante ↔ PA/hogar, y horas ↔
+# contadores. Fuera de esos bloques, casi todas las variables son independientes (|ρ| < 0,3), así que cada bloque
+# aporta información distinta para segmentar. Hay relaciones con sentido de negocio, como más uso → más taller
+# (ρ = 0,38–0,45).
+
+# %%
 # Correlación de Spearman
 corr_cols = ["months_as_mb_customer", "currently_connected_vehicles", "workshop_visits_warranty_goodwill",
              "vehicle_age_years", "purchasing_power_per_inhabitant_eur", "purchasing_power_per_household_eur",
@@ -698,11 +875,32 @@ c2 = (cc / len(cl) * 100).rename(index=names)
 barh(ax, c2, fmt="{:.1f} %", title="Combinaciones de consentimiento (% clientes)")
 save(fig, "fig16_consentimientos.png")
 
-# ==========================================================================
-# 9. TRATAMIENTO DE NULOS - decisión del equipo (Descripcion_uso_de_datos)
-# ==========================================================================
-# El documento referencia las columnas por su letra al abrir el CSV en Excel:
-# A = primera columna (índice sin nombre), B = client_id, ..., AM = purchasing_power_millions_eur.
+# %% [markdown]
+# ## 9. Tratamiento de nulos
+#
+# Se parte de la decisión del equipo (`Descripcion_uso_de_datos`). El documento nombra las columnas por su
+# letra al abrir el CSV en Excel (A = índice sin nombre, …, AM = `purchasing_power_millions_eur`).
+#
+# Aplicada al pie de la letra, esa decisión generaba **incoherencias** en el dataset:
+#
+# | Regla original | Incoherencia | Corrección aplicada |
+# |---|---|---|
+# | J: motor nulo → moda (COMBUSTION) | 7.114 vehículos `EQ…` (eléctricos) quedaban como combustión; la combustión subía del 58 % al 77 % | Cascada de reglas validadas (nombre comercial, serie, año; 99–100 % de acierto). La moda solo se usa para lo que queda: primero la de su serie y después la global |
+# | L: combustible derivado de J por moda | 71.283 turismos de gasolina quedaban como DIESEL | Se sigue derivando de J, pero con el nombre comercial (`d`/CDI/BlueTEC → diésel; furgoneta → diésel; resto → gasolina; PHEV `de` → diésel-eléctrico) |
+# | AA: CP aleatorio entre el mín. y el máx. | El 68 % de los CP generados no existía; un mismo cliente podía recibir CP distintos en cada fila | CP sorteado **entre los CP reales** del país con datos, ponderado por nº de clientes y **uno por cliente** |
+# | X, Y, Z, AL, AM: media/moda del CP | Nunca aplicable a CP existentes (el dato es constante por CP); rellenos independientes rompían las identidades PA total = PA/hab × población | Valor del CP (real o sorteado). Si el CP no tiene datos, mediana de la región para X y Z, y **Y, AL y AM se recalculan** con las identidades |
+# | AB–AG → 0 y AH → moda de la serie | Filas sin telemetría con distancia y consumo 0 pero velocidad 50 km/h; filas parciales con 0 trayectos y cientos de horas | **Sin telemetría:** todo a 0, también velocidad y contadores. **Telemetría parcial:** la métrica que falta toma la mediana de su serie (AH: moda de su serie; AC/AI: moda de la serie, que es un bin válido; consumo de un eléctrico: 0) |
+# | AK: contador nulo → 1 | Contador 1 con velocidad 0 | 0 si no hay telemetría; mediana de la serie si es parcial |
+# | `population = 0` | PA por habitante imputado con población 0 | Se trata como CP sin datos (respaldo de región) |
+#
+# El resto de reglas del documento se aplica tal cual: E → `unknown`, G → moda de su serie, Q → 0, N/O/P/R/S/T/U/V/W
+# (sin nulos en este extracto) y eliminar A, B, C y H. **M** (fecha de matriculación, "?" en el documento) sigue
+# **pendiente**: provisionalmente se usa la mediana de su serie, con un flag.
+#
+# Cada relleno deja un flag (`has_telemetry`, `tel_partial`, `zip_imputed`, `socio_imputed`, `engine_imputed`,
+# `fuel_imputed`, `reg_date_imputed`) para poder aislar su efecto en el clustering.
+
+# %%
 print("Aplicando tratamiento...")
 RAW_COLS = list(raw.columns)
 
@@ -716,47 +914,57 @@ def col_letter(i: int) -> str:
     return s
 
 
-LETTER = {col_letter(i): c for i, c in enumerate(RAW_COLS)}
-L = LETTER  # alias corto: L["AA"] -> "zipcode"
-
+L = {col_letter(i): c for i, c in enumerate(RAW_COLS)}  # L["AA"] -> "zipcode"
 DECISION = {
-    "A": "Quitar (ruido)", "B": "Quitar (ruido)", "C": "Quitar (ruido)", "H": "Quitar (ruido)",
-    "D": "Label encoding", "E": "Label encoding · nulos → nueva categoría", "F": "Label encoding",
-    "G": "Label encoding · nulos → moda de su model_series", "I": "Label encoding (umbrales)",
-    "J": "Label encoding · nulos → moda", "K": "Label encoding (puede haber varios países)",
-    "L": "Label encoding · se saca a partir de J", "M": "Label encoding (?) · tratamiento pendiente",
-    "O": "Label encoding · nulos → OWNER (moda)", "Q": "Label encoding · nulos → 0.0",
-    "R": "Label encoding · nulos → 1 (moda)", "S": "Label encoding · nulos → never_active",
-    "N": "One-hot · nulos → False", "P": "One-hot · nulos → B2C (moda)", "U": "One-hot · nulos → False",
-    "V": "One-hot · nulos → False", "W": "One-hot · nulos → False",
-    "T": "Directo · nulos → moda",
-    "X": "Directo · nulos → media del CP (o media de la misma serie en el mismo CP)",
-    "Y": "Directo · nulos → media del CP", "Z": "Directo · nulos → media del CP",
-    "AA": "Nulos → número aleatorio entre el mín. y el máx. de los CP del país",
-    "AB": "Nulos → 0", "AC": "Nulos → 0", "AD": "Nulos → 0", "AE": "Nulos → 0", "AF": "Nulos → 0", "AG": "Nulos → 0",
-    "AH": "Nulos → velocidad moda de su model_series", "AI": "Nulos → moda de AH en su model_series",
-    "AJ": "Nulos → mediana de AH en su model_series", "AK": "Nulos → 1",
-    "AL": "Nulos → moda de hogares de su CP", "AM": "Nulos → moda del poder adquisitivo de su CP",
+    "A": "Quitar (ruido)", "B": "Quitar (ruido) · se conserva solo como clave", "C": "Quitar (ruido) · se conserva solo como clave",
+    "D": "Sin nulos", "E": "Nulos → 'unknown'", "F": "Sin nulos", "G": "Nulos → moda de su model_series",
+    "H": "Quitar (ruido): función exacta de F", "I": "Sin nulos",
+    "J": "Nulos → cascada validada (nombre, serie, año) → moda de la serie → moda global",
+    "K": "Sin nulos", "L": "Nulos → derivado de J + nombre comercial",
+    "M": "PENDIENTE (?): provisional mediana de su serie + flag", "N": "Nulos → False",
+    "O": "Nulos → OWNER (moda)", "P": "Nulos → B2C (moda)", "Q": "Nulos → 0.0", "R": "Nulos → 1 (moda)",
+    "S": "Nulos → never_active", "T": "Nulos → moda", "U": "Nulos → False", "V": "Nulos → False", "W": "Nulos → False",
+    "X": "Valor de su CP · respaldo mediana región/país", "Y": "Valor de su CP · si no, recalculado = AM×1e6/AL",
+    "Z": "Valor de su CP · respaldo mediana región/país",
+    "AA": "Nulos → CP real del país sorteado (ponderado, uno por cliente)",
+    **{k: "Sin telemetría → 0 · parcial → mediana de su serie" for k in ["AB", "AD", "AE", "AF"]},
+    "AC": "Sin telemetría → '0' · parcial → moda de su serie",
+    "AG": "Sin telemetría → 0 · parcial → 0 si ELECTRIC, si no mediana de su serie",
+    "AH": "Sin telemetría → 0 · parcial → velocidad moda de su serie",
+    "AI": "Sin telemetría → '0' · parcial → moda de su serie",
+    "AJ": "Sin telemetría → 0 · parcial → mediana de su serie",
+    "AK": "Sin telemetría → 0 · parcial → mediana de su serie",
+    "AL": "Valor de su CP · si no, = población / tamaño medio del hogar de la región",
+    "AM": "Valor de su CP · si no, = X × Z / 1e6",
 }
-mapping = pd.DataFrame({"letra": list(LETTER), "columna": list(LETTER.values()),
-                        "nulos originales": [raw[c].isna().sum() for c in LETTER.values()],
-                        "decisión del equipo": [DECISION.get(k, "—") for k in LETTER]})
-md("9.1 Correspondencia letra → columna y decisión del equipo (Descripcion_uso_de_datos)", mapping, index=False,
-   floatfmt=",.0f")
+mapping = pd.DataFrame({"letra": list(L), "columna": list(L.values()),
+                        "nulos originales": [raw[c].isna().sum() for c in L.values()],
+                        "tratamiento aplicado": [DECISION.get(k, "—") for k in L]})
+md("9.1 Columnas (letra del documento) y tratamiento aplicado", mapping, index=False, floatfmt=",.0f")
 
+# %% [markdown]
+# ### 9.2 Limpieza previa y flags
+#
+# Antes de rellenar se corrigen los valores erróneos detectados en la §4 (no son nulos, pero son imposibles)
+# y se guardan los flags que indican qué dato era ausente.
+
+# %%
 t = df.drop(columns=["has_telemetry", "reg_year", "vehicle_age_years"]).copy()
 t["reg_year"] = df.reg_year
 log = []
 
 
 def step(letra, desc, n):
-    log.append({"letra": letra, "columna": L.get(letra, "—"), "tratamiento": desc, "valores afectados": int(n)})
+    log.append({"letra": letra, "columna": L.get(letra, "—"), "tratamiento": desc, "valores": int(n)})
 
 
-def fill(col, values, letra, desc):
-    m = t[col].isna()
-    t.loc[m, col] = values[m] if isinstance(values, pd.Series) else values
-    step(letra, desc, m.sum() - t[col].isna().sum())
+def fill(col, values, letra, desc, mask=None):
+    m = t[col].isna() if mask is None else (mask & t[col].isna())
+    if isinstance(values, pd.Series):
+        t.loc[m, col] = values[m]
+    else:
+        t.loc[m, col] = values
+    step(letra, desc, (m & t[col].notna()).sum())
 
 
 def series_mode(s: pd.Series):
@@ -764,134 +972,50 @@ def series_mode(s: pd.Series):
     return s.mode().iloc[0] if len(s) else np.nan
 
 
-# --- 9.0 Limpieza previa de valores erróneos (no nulos), se mantiene del análisis ---
+# CP con formato erróneo y zonas sin población
 bad_zip = t.zipcode.notna() & ~t.zipcode.str.fullmatch(r"\d{4}")
 t.loc[bad_zip, "zipcode"] = t.loc[bad_zip, "zipcode"].str.extract(r"^(?:A-|CH-)?(\d{4})$")[0]
-step("AA", "Limpieza previa: CP normalizado ('A-'/'CH-' fuera; texto o 5 dígitos → nulo)", bad_zip.sum())
-n_bad = t.notna().sum()
+step("AA", "CP normalizado ('A-'/'CH-' fuera; texto o 5 dígitos → nulo)", bad_zip.sum())
+z0 = t.population == 0
+t.loc[z0, SOCIO] = np.nan
+step("Z/AL", "population = 0 (CP sin residentes) → zona sin datos", z0.sum())
+
+# Telemetría: valores imposibles → nulo; winsorización p1-p99 de lo observado
+n_before = t[TELEMETRY].notna().sum().sum()
 t.loc[t.speed_average < 1, "speed_average"] = np.nan
 t.loc[t.operating_hours_total <= 0, "operating_hours_total"] = np.nan
-t.loc[t.trip_distance_all_counter == 0, ["trip_distance_average", "trip_distance_median", "trip_distance_mode"]] = np.nan
-t.loc[t.speed_all_counter == 0, ["speed_average", "speed_median", "speed_mode"]] = np.nan
+t.loc[t.trip_distance_all_counter == 0, ["trip_distance_average", "trip_distance_median", "trip_distance_mode",
+                                         "trip_distance_all_counter"]] = np.nan
+t.loc[t.speed_all_counter == 0, ["speed_average", "speed_median", "speed_mode", "speed_all_counter"]] = np.nan
 t["speed_median"] = t.speed_median.round(4)
-step("AB–AJ", "Limpieza previa: valores imposibles (vel. < 1, horas = 0, contadores = 0) → nulo",
-     (n_bad - t.notna().sum()).sum())
+step("AB–AK", "valores imposibles (vel. < 1, horas = 0, contadores = 0 con métricas) → nulo",
+     n_before - t[TELEMETRY].notna().sum().sum())
 for letra in ["AB", "AF", "AG", "AH"]:
     c = L[letra]
     lo, hi = t[c].quantile([.01, .99])
-    step(letra, f"Limpieza previa: winsorización p1–p99 de los observados [{lo:,.2f}, {hi:,.2f}]",
-         ((t[c] < lo) | (t[c] > hi)).sum())
-    t[c] = t[c].clip(lo, hi)  # sobre valores observados, antes de rellenar
+    step(letra, f"winsorización p1–p99 de los observados [{lo:,.2f}; {hi:,.2f}]", ((t[c] < lo) | (t[c] > hi)).sum())
+    t[c] = t[c].clip(lo, hi)
 
-# Flags que conservan la información de "dato ausente" antes de rellenar
-t["has_telemetry"] = t[["trip_distance_average", "operating_hours_total", "fuel_consumption_average",
-                        "speed_average"]].notna().any(axis=1)
-t["socio_imputed"] = t.purchasing_power_per_inhabitant_eur.isna()
+# Flags (antes de rellenar)
+t["has_telemetry"] = t[TELEMETRY].notna().any(axis=1)
+t["tel_partial"] = t.has_telemetry & t[TELEMETRY].isna().any(axis=1)
+t["socio_imputed"] = t[SOCIO].isna().any(axis=1)
 t["zip_imputed"] = t.zipcode.isna()
 t["engine_imputed"] = t.engine_concept.isna()
+t["fuel_imputed"] = t.fuel_type.isna()
 t["reg_date_imputed"] = t.reg_date.isna()
 t["months_is_36_spike"] = t.months_as_mb_customer == 36
-before = t.copy()  # foto previa al relleno para medir impacto
+before = t.copy()
+pd.Series({"filas con telemetría completa": (t.has_telemetry & ~t.tel_partial).sum(),
+           "filas con telemetría parcial": t.tel_partial.sum(),
+           "filas sin telemetría": (~t.has_telemetry).sum()}, name="filas").to_frame()
 
-# --- Label encoding: D, E, F, G, I, J, K, L, M, O, Q, R, S ---
-fill(L["E"], "unknown", "E", "nulo → nueva categoría 'unknown'")
-vt_mode = t.groupby("model_series").vehicle_type.agg(series_mode)
-fill(L["G"], t.model_series.map(vt_mode), "G", "nulo → vehicle_type más frecuente de su model_series")
-fill(L["G"], series_mode(t.vehicle_type), "G", "nulo restante (serie sin ningún vehicle_type) → moda global")
-ec_mode = series_mode(t.engine_concept)
-fill(L["J"], ec_mode, "J", f"nulo → moda de la columna ({ec_mode})")
-fuel_by_engine = before.dropna(subset=["fuel_type"]).groupby("engine_concept").fuel_type.agg(series_mode)
-fill(L["L"], t.engine_concept.map(fuel_by_engine), "L",
-     "nulo → fuel_type más frecuente para su engine_concept (sacado de J): "
-     + ", ".join(f"{k}→{v}" for k, v in fuel_by_engine.items()))
-# M: el documento lo deja abierto ("M?"); se mantiene provisionalmente la mediana de su model_series + flag
-med_by_series = t.groupby("model_series").reg_date.median()
-t.loc[t.reg_date.isna(), "reg_date"] = t.loc[t.reg_date.isna(), "model_series"].map(med_by_series)
-t.loc[t.reg_date.isna(), "reg_date"] = t.reg_date.median()
-step("M", "PENDIENTE de decisión ('M?'): provisionalmente mediana de su model_series + flag", before.reg_date.isna().sum())
-t["date_of_first_registration"] = t.reg_date.dt.strftime("%Y-%m-%d")
-t["vehicle_age_years"] = (REF_DATE - t.reg_date).dt.days / 365.25
-fill(L["O"], "OWNER", "O", "nulo → OWNER (moda)")
-fill(L["Q"], 0.0, "Q", "nulo → 0.0")
-fill(L["R"], 1, "R", "nulo → 1 (moda)")
-fill(L["S"], "never_active", "S", "nulo → never_active")
-for letra in ["D", "F", "I", "K"]:
-    step(letra, "sin nulos (solo codificación)", 0)
+# %% [markdown]
+# ### 9.3 Perfil, vehículo y motorización (D–M)
+#
+# Las reglas de motorización se validan antes sobre las filas cuya motorización sí se conoce.
 
-# --- One-hot: N, P, U, V, W ---
-fill(L["N"], False, "N", "nulo → False")
-fill(L["P"], "B2C", "P", "nulo → B2C (moda)")
-for letra in ["U", "V", "W"]:
-    fill(L[letra], False, letra, "nulo → False")
-
-# --- Directo: T, X, Y, Z ---
-fill(L["T"], series_mode(t[L["T"]]), "T", "nulo → moda")
-
-# AA (zipcode): número aleatorio entre el mín. y el máx. de los CP del país (semilla fija)
-rng = np.random.default_rng(42)
-zip_num = pd.to_numeric(t.zipcode, errors="coerce")
-zr = zip_num[zip_num >= 1000].groupby(t.country_code).agg(["min", "max"])  # CP válidos AT/CH: 1000-9999
-m = t.zipcode.isna()
-rand = [f"{rng.integers(zr.loc[c, 'min'], zr.loc[c, 'max'] + 1):04d}" for c in t.loc[m, "country_code"]]
-t.loc[m, "zipcode"] = rand
-known_zip = set(zip(before.country_code, before.zipcode))
-known_soc = set(zip(before.dropna(subset=["population"]).country_code, before.dropna(subset=["population"]).zipcode))
-gen = list(zip(t.loc[m, "country_code"], t.loc[m, "zipcode"]))
-zip_hit = np.mean([g in known_zip for g in gen])
-zip_soc_hit = np.mean([g in known_soc for g in gen])
-step("AA", f"nulo → CP aleatorio en [mín, máx] del país ({', '.join(f'{c}: {int(r["min"])}–{int(r["max"])}' for c, r in zr.iterrows())})",
-     m.sum())
-
-# X, Y, Z, AL, AM: valor del CP (media / moda). Los datos socio-demográficos son constantes por (país, CP)
-# y en el dataset NUNCA hay un CP con unas filas informadas y otras nulas, así que el valor del CP solo
-# rellena las filas cuyo CP aleatorio (AA) coincide con un CP real con datos. Para no dejar nulos se
-# añade un respaldo (no previsto en el documento): mediana de la región (2 primeros dígitos) y del país.
-t["zip_region"] = t.zipcode.str[:2]
-zone = before.dropna(subset=["zipcode"]).drop_duplicates(["country_code", "zipcode"])
-zone = zone.assign(zip_region=zone.zipcode.str[:2])
-for letra, agg in [("X", "mean"), ("Y", "mean"), ("Z", "mean"), ("AL", series_mode), ("AM", series_mode)]:
-    c = L[letra]
-    by_zip = before.groupby(["country_code", "zipcode"])[c].agg(agg)
-    key = pd.MultiIndex.from_arrays([t.country_code, t.zipcode])
-    fill(c, pd.Series(by_zip.reindex(key).values, index=t.index), letra,
-         f"nulo → {'media' if agg == 'mean' else 'moda'} de su CP")
-    if letra == "X":  # variante del documento: misma serie en el mismo CP (equivale al CP: dato de zona)
-        by_zs = before.groupby(["country_code", "zipcode", "model_series"])[c].mean()
-        key3 = pd.MultiIndex.from_arrays([t.country_code, t.zipcode, t.model_series])
-        fill(c, pd.Series(by_zs.reindex(key3).values, index=t.index), letra, "nulo → media de su serie en su CP")
-    reg = zone.groupby(["country_code", "zip_region"])[c].median()
-    keyr = pd.MultiIndex.from_arrays([t.country_code, t.zip_region])
-    fill(c, pd.Series(reg.reindex(keyr).values, index=t.index), letra,
-         "RESPALDO (no en el documento): mediana de su región CP")
-    fill(c, t.country_code.map(zone.groupby("country_code")[c].median()), letra,
-         "RESPALDO (no en el documento): mediana del país")
-
-# --- Telemetría: AB-AG → 0; AH, AI, AJ por model_series; AK → 1 ---
-for letra in ["AB", "AC", "AD", "AE", "AF", "AG"]:
-    fill(L[letra], "0" if t[L[letra]].dtype == object or str(t[L[letra]].dtype) == "str" else 0.0, letra, "nulo → 0")
-ah_obs = before[["model_series", "speed_average"]].dropna()
-ah_mode = ah_obs.assign(v=ah_obs.speed_average.round()).groupby("model_series").v.agg(series_mode)
-ah_glob = series_mode(ah_obs.speed_average.round())
-fill(L["AH"], t.model_series.map(ah_mode), "AH", "nulo → velocidad moda (redondeada a 1 km/h) de su model_series")
-fill(L["AH"], ah_glob, "AH", "nulo restante (serie sin datos) → moda global")
-fill(L["AI"], t.model_series.map(ah_mode).map(lambda v: f"{v:g}" if pd.notna(v) else np.nan), "AI",
-     "nulo → moda de AH en su model_series")
-fill(L["AI"], f"{ah_glob:g}", "AI", "nulo restante → moda global de AH")
-ah_med = ah_obs.groupby("model_series").speed_average.median()
-fill(L["AJ"], t.model_series.map(ah_med), "AJ", "nulo → mediana de AH en su model_series")
-fill(L["AJ"], ah_obs.speed_average.median(), "AJ", "nulo restante → mediana global de AH")
-fill(L["AK"], 1.0, "AK", "nulo → 1")
-
-md("9.2 Registro de tratamientos aplicados (en orden)", pd.DataFrame(log), index=False, floatfmt=",.0f")
-note(f"- CP aleatorios (AA) generados: **{m.sum():,}**. Solo el **{pct(zip_hit)}** coincide con un CP que existe en el "
-     f"dataset para ese país y el **{pct(zip_soc_hit)}** con un CP con datos socio-demográficos. El resto son códigos "
-     "inventados que no corresponden a ninguna zona real.")
-note("- Los datos socio-demográficos son constantes dentro de cada (país, CP) y ningún CP tiene a la vez filas con dato "
-     "y filas nulas, así que la regla 'media del CP' no puede rellenar una fila cuyo CP original existe: solo actúa "
-     "sobre CP aleatorios que coinciden con uno real. Por eso hacen falta los respaldos de región y país.")
-
-# --- Impacto del tratamiento ---
-# 1) engine_concept: moda frente a la cascada validada del análisis (reglas con 99-100 % de acierto)
+# %%
 def name_rule(vt):
     if not isinstance(vt, str):
         return np.nan
@@ -903,106 +1027,292 @@ def name_rule(vt):
     return np.nan
 
 
+def is_diesel_name(s: pd.Series) -> pd.Series:
+    return s.fillna("").str.contains(r"\b\d{3}\s?d\b|\bd\s?4MATIC|CDI|BLUETEC|\b\d{3}\s?de\b", case=False, regex=True)
+
+
 def consistent_lookup(key):
     k = df.dropna(subset=["engine_concept"])
     return k.groupby(key).engine_concept.agg(
         lambda s: s.mode().iloc[0] if s.value_counts(normalize=True).iloc[0] >= .9 else np.nan).dropna()
 
 
+def fuel_from_engine(d: pd.DataFrame) -> pd.Series:
+    dn = is_diesel_name(d.vehicle_type)
+    ec = d.engine_concept
+    return pd.Series(np.select(
+        [ec == "ELECTRIC", (ec == "PLUGIN_HYBRID") & dn, ec == "PLUGIN_HYBRID", dn | (d.product_group == "T")],
+        ["ELECTRIC", "DIESEL,ELECTRIC", "PETROL,ELECTRIC", "DIESEL"], "PETROL"), index=d.index)
+
+
 k = df[df.engine_concept.notna()]
 nr = k.vehicle_type.map(name_rule)
 old = k[(k.reg_year <= 2018) & nr.isna()]
+kf = df.dropna(subset=["engine_concept", "fuel_type"])
+fuel_true = kf.fuel_type.str.replace("PETROL_PLUS", "PETROL")
+ec_mode = series_mode(df.engine_concept)
 valid = pd.DataFrame([
     {"regla": "Nombre EQ*/electric → ELECTRIC; 'e'/'de'/Hybrid → PLUGIN_HYBRID", "filas evaluables": nr.notna().sum(),
      "acierto %": (nr[nr.notna()] == k.engine_concept[nr.notna()]).mean() * 100},
     {"regla": "Matriculado ≤ 2018 y sin nombre eléctrico → COMBUSTION", "filas evaluables": len(old),
      "acierto %": (old.engine_concept == "COMBUSTION").mean() * 100},
-    {"regla": f"Moda global ({ec_mode}) asignada a cualquier fila", "filas evaluables": len(k),
+    {"regla": "Combustible derivado de engine_concept + nombre (PETROL_PLUS cuenta como PETROL)",
+     "filas evaluables": len(kf), "acierto %": (fuel_from_engine(kf) == fuel_true).mean() * 100},
+    {"regla": f"(Referencia) moda global {ec_mode} para cualquier fila", "filas evaluables": len(k),
      "acierto %": (k.engine_concept == ec_mode).mean() * 100},
 ])
-md("9.3 Fiabilidad de reglas de motorización medida sobre filas con dato conocido", valid, index=False, floatfmt=",.2f")
+md("9.3 Validación de las reglas de motorización sobre filas con dato conocido", valid, index=False, floatfmt=",.2f")
 
-miss = df[df.engine_concept.isna()].copy()
-casc = pd.Series(np.nan, index=miss.index, dtype=object)
-for fn in [lambda d: d.vehicle_type.map(consistent_lookup("vehicle_type")),
-           lambda d: d.vehicle_type.map(name_rule),
-           lambda d: d.model_series.map(consistent_lookup("model_series")),
-           lambda d: d.reg_year.le(2018).map({True: "COMBUSTION"})]:
-    mm = casc.isna()
-    casc[mm] = fn(miss[mm])
-cmp_eng = casc.fillna("indeterminado").value_counts().rename("filas").to_frame()
-cmp_eng["%"] = cmp_eng.filas / len(miss) * 100
-cmp_eng.index.name = "motorización que indican las reglas validadas (filas con J nulo)"
-md(f"9.4 Filas con engine_concept nulo (todas imputadas como {ec_mode}): qué indican las reglas validadas", cmp_eng,
-   floatfmt=",.2f")
+# %%
+fill(L["E"], "unknown", "E", "nulo → nueva categoría 'unknown'")
+fill(L["G"], t.model_series.map(t.groupby("model_series").vehicle_type.agg(series_mode)), "G",
+     "nulo → vehicle_type más frecuente de su model_series")
+
+# J: cascada validada; la moda solo para lo que queda (primero la de su serie, luego la global)
+t["engine_concept_source"] = np.where(t.engine_concept.notna(), "original", None)
+series_mode_engine = df.dropna(subset=["engine_concept"]).groupby("model_series").engine_concept.agg(series_mode)
+for src, desc, fn in [
+    ("lookup_vehicle_type", "vehicle_type con ≥ 90 % de consistencia", lambda d: d.vehicle_type.map(consistent_lookup("vehicle_type"))),
+    ("regla_nombre", "nombre comercial (EQ*, e/de, Hybrid)", lambda d: d.vehicle_type.map(name_rule)),
+    ("lookup_model_series", "model_series con ≥ 90 % de consistencia", lambda d: d.model_series.map(consistent_lookup("model_series"))),
+    ("regla_antiguedad", "matriculado ≤ 2018 → COMBUSTION", lambda d: d.reg_year.le(2018).map({True: "COMBUSTION"})),
+    ("moda_serie", "moda de su model_series", lambda d: d.model_series.map(series_mode_engine)),
+    ("moda_global", f"moda global ({ec_mode})", lambda d: pd.Series(ec_mode, index=d.index)),
+]:
+    m = t.engine_concept.isna()
+    t.loc[m, "engine_concept"] = fn(t.loc[m])
+    filled = m & t.engine_concept.notna()
+    t.loc[filled, "engine_concept_source"] = src
+    step("J", f"nulo → {desc}", filled.sum())
+
+# L: derivado de J + nombre comercial
+fill(L["L"], fuel_from_engine(t), "L", "nulo → derivado de engine_concept + nombre comercial")
+
+# M: pendiente de decisión; provisional
+med_by_series = t.groupby("model_series").reg_date.median()
+m = t.reg_date.isna()
+t.loc[m, "reg_date"] = t.loc[m, "model_series"].map(med_by_series)
+t.loc[t.reg_date.isna(), "reg_date"] = t.reg_date.median()
+t["date_of_first_registration"] = t.reg_date.dt.strftime("%Y-%m-%d")
+t["vehicle_age_years"] = (REF_DATE - t.reg_date).dt.days / 365.25
+step("M", "PENDIENTE: provisional mediana de su model_series (+ flag)", m.sum())
+
+fill(L["O"], "OWNER", "O", "nulo → OWNER")
+fill(L["Q"], 0.0, "Q", "nulo → 0.0")
+fill(L["R"], 1, "R", "nulo → 1")
+fill(L["S"], "never_active", "S", "nulo → never_active")
+fill(L["N"], False, "N", "nulo → False")
+fill(L["P"], "B2C", "P", "nulo → B2C")
+for letra in ["U", "V", "W"]:
+    fill(L[letra], False, letra, "nulo → False")
+fill(L["T"], series_mode(t[L["T"]]), "T", "nulo → moda")
+
+# %% [markdown]
+# ### 9.4 Código postal y socio-demografía (X, Y, Z, AA, AL, AM)
+#
+# Los datos socio-demográficos son atributos de la **zona**. Para que el CP imputado y sus valores sean
+# coherentes, se sortea un CP **real** del país (con datos y ponderado por número de clientes), una sola vez
+# por cliente. Así el cliente recibe todos los valores de esa zona. Los clientes cuyo CP existe pero no tiene
+# datos reciben la mediana de su región para X y Z, y las demás columnas se **recalculan** con las identidades
+# exactas detectadas en la §4.
+
+# %%
+zone = (before.dropna(subset=["zipcode", *SOCIO]).drop_duplicates(["country_code", "zipcode"])
+        .set_index(["country_code", "zipcode"])[SOCIO])
+clients_per_zone = before.dropna(subset=["zipcode", *SOCIO]).drop_duplicates("client_id").groupby(
+    ["country_code", "zipcode"]).size()
+rng = np.random.default_rng(42)
+nozip = t.loc[t.zipcode.isna(), ["client_id", "country_code"]].drop_duplicates("client_id")
+assigned = {}
+for ctry, grp in nozip.groupby("country_code"):
+    w = clients_per_zone.loc[ctry]
+    assigned.update(zip(grp.client_id, rng.choice(w.index.to_numpy(), size=len(grp), p=(w / w.sum()).to_numpy())))
+fill("zipcode", t.client_id.map(assigned), "AA", "nulo → CP real del país sorteado (ponderado, uno por cliente)")
+
+key = pd.MultiIndex.from_arrays([t.country_code, t.zipcode])
+for letra in ["X", "Y", "Z", "AL", "AM"]:
+    c = L[letra]
+    fill(c, pd.Series(zone[c].reindex(key).to_numpy(), index=t.index), letra, "nulo → valor de su CP")
+
+# CP existentes sin datos: X y Z por mediana de la región (2 primeros dígitos) o del país; resto por identidad
+zone_r = zone.reset_index().assign(zip_region=lambda d: d.zipcode.str[:2],
+                                   hh=lambda d: d.population / d.number_of_households)
+t["zip_region"] = t.zipcode.str[:2]
+keyr = pd.MultiIndex.from_arrays([t.country_code, t.zip_region])
+for letra in ["X", "Z"]:
+    c = L[letra]
+    fill(c, pd.Series(zone_r.groupby(["country_code", "zip_region"])[c].median().reindex(keyr).to_numpy(), index=t.index),
+         letra, "CP sin datos → mediana de su región")
+    fill(c, t.country_code.map(zone_r.groupby("country_code")[c].median()), letra, "CP sin datos → mediana del país")
+hh = pd.Series(zone_r.groupby(["country_code", "zip_region"]).hh.median().reindex(keyr).to_numpy(), index=t.index)
+hh = hh.fillna(t.country_code.map(zone_r.groupby("country_code").hh.median()))
+fill(L["AL"], (t.population / hh).round(), "AL", "CP sin datos → población / tamaño medio del hogar de la región")
+fill(L["AM"], t.purchasing_power_per_inhabitant_eur * t.population / 1e6, "AM", "CP sin datos → X × Z / 1e6")
+fill(L["Y"], t.purchasing_power_millions_eur * 1e6 / t.number_of_households, "Y", "CP sin datos → AM × 1e6 / AL")
+
+gen = list(zip(nozip.country_code, nozip.client_id.map(assigned)))
+note(f"- Clientes sin CP: **{len(nozip):,}**. Todos reciben un CP real con datos: "
+     f"**{np.mean([g in zone.index for g in gen]) * 100:.1f} %** de CP existentes (frente al 31,6 % del sorteo uniforme "
+     "entre el mínimo y el máximo).")
+
+# %% [markdown]
+# ### 9.5 Telemetría (AB–AK)
+#
+# - **Sin ninguna telemetría:** todas las métricas valen 0 (también velocidad y contadores). Así el 0 significa
+#   siempre "sin datos" y el flag `has_telemetry` lo hace explícito.
+# - **Telemetría parcial:** la métrica que falta se rellena con un valor plausible para ese tipo de coche (mediana
+#   de su serie; para AH, la velocidad moda de su serie; para las modas en texto, la moda de su serie, que es un bin
+#   válido). Si el coche es eléctrico, el consumo de combustible es 0.
+
+# %%
+no_tel = ~t.has_telemetry
+for c in TELEMETRY:
+    letra = next(k for k, v in L.items() if v == c)
+    fill(c, "0" if c.endswith("_mode") else 0.0, letra, "sin telemetría → 0", mask=no_tel)
+
+part = t.has_telemetry
+fill("fuel_consumption_average", 0.0, "AG", "parcial y ELECTRIC → 0", mask=part & (t.engine_concept == "ELECTRIC"))
+obs = before[before.has_telemetry]
+for c in TELEMETRY:
+    letra = next(k for k, v in L.items() if v == c)
+    if c == "speed_average":
+        by_series = obs.assign(v=obs[c].round()).groupby("model_series").v.agg(series_mode)
+        glob = series_mode(obs[c].round())
+        how = "velocidad moda de su serie"
+    elif c.endswith("_mode"):
+        by_series = obs.groupby("model_series")[c].agg(series_mode)
+        glob = series_mode(obs[c])
+        how = "moda de su serie"
+    else:  # mediana "lower": devuelve un valor observado (en las medianas discretizadas, un bin válido)
+        by_series = obs.groupby("model_series")[c].quantile(.5, interpolation="lower")
+        glob = obs[c].quantile(.5, interpolation="lower")
+        how = "mediana de su serie"
+    fill(c, t.model_series.map(by_series), letra, f"parcial → {how}", mask=part)
+    fill(c, glob, letra, "parcial → valor global (serie sin datos)", mask=part)
+
+md("9.6 Registro de tratamientos aplicados (en orden)",
+   pd.DataFrame(log).query("valores > 0"), index=False, floatfmt=",.0f")
+
+# %% [markdown]
+# ## 10. Comprobaciones de coherencia del dataset tratado
+#
+# Cada comprobación cuenta las filas, clientes o vehículos que la **incumplen**. El objetivo es 0 en todas.
+
+# %%
+clean = t.drop(columns=[L["A"], L["H"], "reg_date", "reg_year", "zip_region"], errors="ignore")
+cur_cols = [c for c in CLIENT_COLS if c in clean.columns]
+veh_cols = ["model_series", "vehicle_type", "product_group", "engine_concept", "fuel_type", "date_of_first_registration"]
+real_bins = {c: set(df[c].dropna().unique()) | ({"0"} if c.endswith("_mode") else {0.0})
+             for c in ["trip_distance_mode", "speed_mode", "trip_distance_median"]}
+real_bins["speed_median"] = set(df.speed_median.dropna().round(4).unique()) | {0.0}
+pos = clean.population > 0
+tel_core = ["trip_distance_average", "operating_hours_total", "speed_average", "trip_distance_all_counter", "speed_all_counter"]
+checks = {
+    "Nulos en cualquier columna (celdas)": int(clean.isna().sum().sum()),
+    "Clientes con atributos de cliente distintos entre sus filas (incl. CP y socio-demografía)":
+        int((clean.groupby("client_id")[cur_cols].nunique() > 1).any(axis=1).sum()),
+    "Vehículos con atributos de vehículo distintos entre sus filas":
+        int((clean.groupby("vehicle_id")[veh_cols].nunique() > 1).any(axis=1).sum()),
+    "(país, CP) con más de un valor socio-demográfico":
+        int((clean.groupby(["country_code", "zipcode"])[SOCIO].nunique() > 1).any(axis=1).sum()),
+    "CP imputados que no existen en el país": int((~pd.MultiIndex.from_arrays(
+        [clean.country_code[clean.zip_imputed], clean.zipcode[clean.zip_imputed]]).isin(zone.index)).sum()),
+    "PA total ≠ PA/hab × población / 1e6 (error > 0,1 %)": int((
+        (clean.purchasing_power_millions_eur - clean.purchasing_power_per_inhabitant_eur * clean.population / 1e6).abs()
+        > 1e-3 * clean.purchasing_power_millions_eur)[pos].sum()),
+    "PA/hogar ≠ PA total × 1e6 / hogares (error > 0,1 %)": int((
+        (clean.purchasing_power_per_household_eur - clean.purchasing_power_millions_eur * 1e6 / clean.number_of_households).abs()
+        > 1e-3 * clean.purchasing_power_per_household_eur)[pos].sum()),
+    "Motor y combustible incompatibles": int((
+        ((clean.engine_concept == "ELECTRIC") != (clean.fuel_type == "ELECTRIC"))
+        | ((clean.engine_concept == "PLUGIN_HYBRID") != clean.fuel_type.str.endswith(",ELECTRIC"))).sum()),
+    "Vehículos con nombre eléctrico (EQ…) imputados como no eléctricos": int(
+        (clean.engine_imputed & (clean.vehicle_type.map(name_rule) == "ELECTRIC") & (clean.engine_concept != "ELECTRIC")).sum()),
+    "Turismos con nombre de gasolina imputados como DIESEL": int(
+        (clean.fuel_imputed & ~is_diesel_name(clean.vehicle_type) & (clean.product_group != "T")
+         & clean.fuel_type.str.startswith("DIESEL")).sum()),
+    "Sin telemetría pero con alguna métrica ≠ 0": int((~clean.has_telemetry & (clean[tel_core + [
+        "fuel_consumption_average", "trip_distance_median", "speed_median"]] != 0).any(axis=1)).sum()),
+    "Con telemetría pero con alguna métrica básica = 0": int((clean.has_telemetry & (clean[tel_core] == 0).any(axis=1)).sum()),
+    "Con telemetría, no eléctrico y consumo = 0": int((clean.has_telemetry & (clean.engine_concept != "ELECTRIC")
+                                                      & (clean.fuel_consumption_average == 0)).sum()),
+    "Eléctricos con consumo de combustible > 0": int(((clean.engine_concept == "ELECTRIC")
+                                                     & (clean.fuel_consumption_average > 0)).sum()),
+    "Modas/medianas que no son un bin válido": int(sum((~clean[c].isin(v)).sum() for c, v in real_bins.items())),
+}
+chk = pd.Series(checks, name="incumplimientos").to_frame()
+md("10.1 Comprobaciones de coherencia (objetivo: 0)", chk, floatfmt=",.0f")
+assert chk.incumplimientos.eq(0).all(), "Hay comprobaciones de coherencia que fallan"
+
+# %% [markdown]
+# ### 10.2 Impacto del tratamiento en las distribuciones
+
+# %%
 ec_cmp = pd.concat([
     df.engine_concept.value_counts(normalize=True).mul(100).rename("% original (sobre conocidos)"),
-    t.engine_concept.value_counts(normalize=True).mul(100).rename("% tras moda (decisión equipo)"),
-    pd.concat([df.engine_concept.dropna(), casc.fillna("UNKNOWN")]).value_counts(normalize=True).mul(100)
-    .rename("% con cascada validada (alternativa)")], axis=1)
-md("9.5 Distribución de engine_concept: original / decisión del equipo / alternativa", ec_cmp, floatfmt=".2f")
-md("9.6 fuel_type tras el tratamiento (filas)", t.fuel_type.value_counts().rename("filas"))
+    df.engine_concept.fillna(ec_mode).value_counts(normalize=True).mul(100).rename("% con la moda (regla original J)"),
+    clean.engine_concept.value_counts(normalize=True).mul(100).rename("% tratamiento final"),
+], axis=1).fillna(0)
+md("10.2 engine_concept: original, moda y tratamiento final", ec_cmp, floatfmt=".1f")
+md("10.3 Origen del valor final de engine_concept", clean.engine_concept_source.value_counts().rename("filas"))
+fb = lambda s: s.str.replace("PETROL_PLUS", "PETROL").str.replace(r"^(DIESEL|PETROL),ELECTRIC$", "PHEV", regex=True)
+md("10.4 fuel_type (agrupado): original frente a tratamiento final", pd.concat([
+    fb(df.fuel_type.dropna()).value_counts(normalize=True).mul(100).rename("% original (sobre conocidos)"),
+    fb(clean.fuel_type).value_counts(normalize=True).mul(100).rename("% tratamiento final")], axis=1), floatfmt=".1f")
 
-# 2) Telemetría: efecto de rellenar con 0 / moda por serie
 imp = []
-for c in ["trip_distance_average", "trip_distance_median", "trip_distance_all_counter", "operating_hours_total",
-          "fuel_consumption_average", "speed_average", "speed_median", "speed_all_counter",
+for c in ["trip_distance_average", "operating_hours_total", "fuel_consumption_average", "speed_average",
           "purchasing_power_per_inhabitant_eur", "population"]:
-    b, a = before[c], t[c]
-    imp.append({"columna": c, "media antes (observados)": b.mean(), "media después": a.mean(),
-                "mediana antes": b.median(), "mediana después": a.median(),
-                "% filas = 0 después": (a == 0).mean() * 100, "% filas imputadas": b.isna().mean() * 100})
-md("9.7 Impacto del relleno en las variables numéricas", pd.DataFrame(imp), index=False, floatfmt=",.2f")
-ev = t[t.engine_concept == "ELECTRIC"]
-note(f"- Con la regla AG (consumo nulo → 0) los **{len(ev):,}** vehículos eléctricos pasan a tener consumo 0 l/100 km "
-     "(coherente: no gastan combustible) y quedan mezclados con los vehículos térmicos sin telemetría, que también valen 0.")
+    b, a, h = before[c], clean[c], clean.has_telemetry if c in TELEMETRY else slice(None)
+    imp.append({"columna": c, "mediana observada": b.median(), "mediana final (filas con dato)": a[h].median(),
+                "% filas imputadas": b.isna().mean() * 100})
+md("10.5 Medianas antes y después (en telemetría, solo sobre filas con telemetría)", pd.DataFrame(imp), index=False,
+   floatfmt=",.2f")
 
-# Figura: impacto en distribuciones
 fig, axes = plt.subplots(1, 3, figsize=(12, 3.4))
 for ax, (c, lab, rg) in zip(axes, [("trip_distance_average", "Distancia media por trayecto (km)", (0, 50)),
                                     ("fuel_consumption_average", "Consumo medio (l/100 km)", (0, 20)),
                                     ("speed_average", "Velocidad media (km/h)", (0, 85))]):
     bins = np.linspace(*rg, 51)
-    ax.hist(t[c].clip(*rg), bins=bins, color=CAT[1], label="tras tratamiento", edgecolor=SURFACE, linewidth=0.4)
-    ax.hist(before[c].dropna().clip(*rg), bins=bins, color=BLUE, label="observados", edgecolor=SURFACE, linewidth=0.4)
+    obs_v = before[c].dropna().clip(*rg)
+    imp_v = clean.loc[clean.tel_partial & before[c].isna(), c].clip(*rg)
+    ax.hist([obs_v, imp_v], bins=bins, stacked=True, color=[BLUE, CAT[1]], edgecolor=SURFACE, linewidth=0.4,
+            label=["observado", "imputado (telemetría parcial)"])
     ax.set_title(lab, fontsize=9.5)
     ax.set_ylabel("filas")
-axes[0].legend(loc="upper right")
-fig.suptitle("Efecto del relleno de nulos de telemetría (decisión del equipo)", x=0.01, ha="left", fontsize=11,
-             fontweight="bold")
+    ax.text(0.98, 0.95, f"sin telemetría (= 0): {(~clean.has_telemetry).sum():,} filas", transform=ax.transAxes,
+            ha="right", va="top", fontsize=7.5, color=INK2)
+axes[0].legend(loc="center right")
+fig.suptitle("Telemetría tras el tratamiento (sin contar las filas a 0)", x=0.01, ha="left", fontsize=11, fontweight="bold")
 save(fig, "fig17_impacto_relleno_telemetria.png")
 
-fig, ax = plt.subplots(figsize=(8, 3.6))
-ec_plot = ec_cmp.drop(columns="% original (sobre conocidos)").fillna(0).T[["COMBUSTION", "MILD_HYBRID", "PLUGIN_HYBRID",
-                                                                             "ELECTRIC", "UNKNOWN"]]
-leftp = np.zeros(len(ec_plot))
-for i, col in enumerate(ec_plot.columns):
-    color = CAT[i] if col != "UNKNOWN" else "#c3c2b7"
-    ax.barh(ec_plot.index, ec_plot[col], left=leftp, height=0.55, color=color, edgecolor=SURFACE, linewidth=2, label=col)
-    for j, v in enumerate(ec_plot[col].values):
+fig, ax = plt.subplots(figsize=(8, 3.8))
+order = ["COMBUSTION", "MILD_HYBRID", "PLUGIN_HYBRID", "ELECTRIC"]
+plot = ec_cmp.T[order]
+left = np.zeros(len(plot))
+for i, col in enumerate(order):
+    ax.barh(plot.index, plot[col], left=left, height=0.55, color=CAT[i], edgecolor=SURFACE, linewidth=2, label=col)
+    for j, v in enumerate(plot[col].values):
         if v > 4:
-            ax.text(leftp[j] + v / 2, j, f"{v:.0f}", ha="center", va="center", fontsize=8, color="white")
-    leftp += ec_plot[col].values
+            ax.text(left[j] + v / 2, j, f"{v:.0f}", ha="center", va="center", fontsize=8, color="white")
+    left += plot[col].values
 ax.set_xlim(0, 100); ax.grid(axis="y", visible=False); ax.invert_yaxis()
 ax.set_xlabel("% de filas")
-ax.set_title("engine_concept tras imputar: moda frente a reglas validadas")
-ax.legend(ncol=5, loc="upper center", bbox_to_anchor=(0.5, -0.22))
+ax.set_title("engine_concept: original, moda y tratamiento final")
+ax.legend(ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.2))
 save(fig, "fig18_engine_moda_vs_reglas.png")
 
-# --- Exclusión ("quitar ruido") y guardado ---
-drop_cols = [L["A"], L["H"]]  # A y H se eliminan
-key_cols = [L["B"], L["C"]]   # B y C también son ruido para el modelo; se guardan solo como claves
-clean = t.drop(columns=[c for c in drop_cols if c in t.columns] + ["reg_date", "reg_year", "zip_region"],
-               errors="ignore")
-na_after = clean.isna().sum()
-md("9.8 Nulos que quedan tras el tratamiento", na_after[na_after > 0].rename("nulos") if (na_after > 0).any()
-   else pd.Series({"(ninguna columna)": 0}, name="nulos"))
-note(f"- Columnas eliminadas por ruido: {', '.join(f'`{c}`' for c in drop_cols)}. "
-     f"{', '.join(f'`{c}`' for c in key_cols)} también son ruido para el modelo, pero se conservan en el fichero "
-     "**solo como claves** (sin ellas no se puede agregar por cliente). No deben entrar como features.")
+# %% [markdown]
+# ### 10.3 Datos tratados y vista por cliente
+#
+# Se eliminan A (índice) y H (`model_class`). `client_id` y `vehicle_id` (B, C) son ruido para el modelo, pero se
+# conservan **solo como claves**: sin ellas no se puede agregar por cliente. La vista por cliente calcula la
+# telemetría como media **solo de las relaciones con telemetría**; los clientes sin ninguna quedan a 0 con
+# `has_telemetry = False`.
+
+# %%
 clean.to_parquet(PROC / "relaciones_limpio.parquet", index=False)
 
-# Vista cliente para retos posteriores
 gc = clean.groupby("client_id")
 cur = clean[clean.is_current_vehicle]
 clients = clean.drop_duplicates("client_id").set_index("client_id")[
@@ -1017,11 +1327,26 @@ clients["edad_vehiculo_actual_media"] = cur.groupby("client_id").vehicle_age_yea
 clients["share_electrificado_actual"] = cur.groupby("client_id").engine_concept.apply(
     lambda s: s.isin(["ELECTRIC", "PLUGIN_HYBRID"]).mean())
 clients["has_telemetry"] = gc.has_telemetry.any()
+tel_rel = clean[clean.has_telemetry].groupby("client_id")
 for c in ["trip_distance_average", "operating_hours_total", "fuel_consumption_average", "speed_average"]:
-    clients[c] = gc[c].mean()
+    clients[c] = tel_rel[c].mean().reindex(clients.index).fillna(0.0)
 clients.to_parquet(PROC / "clientes.parquet")
-md("9.9 Vista agregada a nivel cliente (data/processed/clientes.parquet)", clients.describe(include="all").T
+md("10.6 Vista agregada por cliente (data/processed/clientes.parquet)", clients.describe(include="all").T
    .drop(columns=["top", "freq"], errors="ignore"), floatfmt=",.2f")
 
 (OUT / "resultados.md").write_text("# Resultados del EDA (generado por eda/eda_reto1.py)\n" + "\n".join(_md), encoding="utf-8")
-print(f"OK -> {OUT / 'resultados.md'} | figuras en {FIG} | {len(clean):,} filas limpias, {len(clients):,} clientes")
+print(f"OK -> {len(clean):,} filas tratadas ({clean.shape[1]} columnas), {len(clients):,} clientes")
+
+# %% [markdown]
+# ## 11. Conclusiones
+#
+# **Principales características de los clientes:** base B2C (99,4 %), madura (61 % con 45 años o más) y mayoritariamente
+# masculina, concentrada en Suiza (66 %) y con un único vehículo conectado (81 %). El 71 % nunca ha usado leasing y el
+# 81 % acepta todos los canales de contacto. El parque está dominado por SUV y compactos premium (GLC, C, A, B/GLA/GLB),
+# con una electrificación que se acelera: los BEV son el 37,5 % de las matriculaciones de 2026.
+#
+# **Calidad de datos:** el grano es cliente–vehículo; hay telemetría estructuralmente ausente (52 %), motorización
+# incompleta (44–59 %), columnas redundantes, un pico artificial en 36 meses como cliente, una taxonomía de modelo solapada
+# y CP erróneos. Todo queda tratado, sin nulos y con las comprobaciones de coherencia a 0.
+#
+# El resumen breve del reto está en `eda/Resumen_reto1.md`.
