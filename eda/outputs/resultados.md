@@ -1,4 +1,4 @@
-# Resultados del EDA (generado por eda/eda_reto1.py)
+# Resultados del EDA (generado por eda/EDA_reto1.ipynb)
 
 ### 1.1 Dimensiones
 
@@ -620,189 +620,199 @@
 | trip_distance_average ↔ speed_average                                    |        0.733 |
 
 
-### 9.1 Correspondencia letra → columna y decisión del equipo (Descripcion_uso_de_datos)
+### 9.1 Columnas (letra del documento) y tratamiento aplicado
 
-| letra   | columna                             |   nulos originales | decisión del equipo                                                       |
-|:--------|:------------------------------------|-------------------:|:--------------------------------------------------------------------------|
-| A       | Unnamed: 0                          |                  0 | Quitar (ruido)                                                            |
-| B       | client_id                           |                  0 | Quitar (ruido)                                                            |
-| C       | vehicle_id                          |                  0 | Quitar (ruido)                                                            |
-| D       | age_range                           |                  0 | Label encoding                                                            |
-| E       | gender_derived                      |              33923 | Label encoding · nulos → nueva categoría                                  |
-| F       | model_series                        |                  0 | Label encoding                                                            |
-| G       | vehicle_type                        |                922 | Label encoding · nulos → moda de su model_series                          |
-| H       | model_class                         |               3369 | Quitar (ruido)                                                            |
-| I       | product_group                       |                  0 | Label encoding (umbrales)                                                 |
-| J       | engine_concept                      |             134390 | Label encoding · nulos → moda                                             |
-| K       | country_code                        |                  0 | Label encoding (puede haber varios países)                                |
-| L       | fuel_type                           |             178745 | Label encoding · se saca a partir de J                                    |
-| M       | date_of_first_registration          |               4182 | Label encoding (?) · tratamiento pendiente                                |
-| N       | is_current_vehicle                  |                  0 | One-hot · nulos → False                                                   |
-| O       | role                                |                  0 | Label encoding · nulos → OWNER (moda)                                     |
-| P       | role_type                           |                  0 | One-hot · nulos → B2C (moda)                                              |
-| Q       | months_as_mb_customer               |                  4 | Label encoding · nulos → 0.0                                              |
-| R       | currently_connected_vehicles        |                  0 | Label encoding · nulos → 1 (moda)                                         |
-| S       | finance_leasing_status              |                  0 | Label encoding · nulos → never_active                                     |
-| T       | workshop_visits_warranty_goodwill   |                  0 | Directo · nulos → moda                                                    |
-| U       | consent_phone_communication_channel |                  0 | One-hot · nulos → False                                                   |
-| V       | consent_epost_communication_channel |                  0 | One-hot · nulos → False                                                   |
-| W       | consent_post_communication_channel  |                  0 | One-hot · nulos → False                                                   |
-| X       | purchasing_power_per_inhabitant_eur |              19087 | Directo · nulos → media del CP (o media de la misma serie en el mismo CP) |
-| Y       | purchasing_power_per_household_eur  |              19087 | Directo · nulos → media del CP                                            |
-| Z       | population                          |              19014 | Directo · nulos → media del CP                                            |
-| AA      | zipcode                             |              16135 | Nulos → número aleatorio entre el mín. y el máx. de los CP del país       |
-| AB      | trip_distance_average               |             185857 | Nulos → 0                                                                 |
-| AC      | trip_distance_mode                  |             179830 | Nulos → 0                                                                 |
-| AD      | trip_distance_median                |             179830 | Nulos → 0                                                                 |
-| AE      | trip_distance_all_counter           |             179830 | Nulos → 0                                                                 |
-| AF      | operating_hours_total               |             174358 | Nulos → 0                                                                 |
-| AG      | fuel_consumption_average            |             180725 | Nulos → 0                                                                 |
-| AH      | speed_average                       |             182382 | Nulos → velocidad moda de su model_series                                 |
-| AI      | speed_mode                          |             181159 | Nulos → moda de AH en su model_series                                     |
-| AJ      | speed_median                        |             181159 | Nulos → mediana de AH en su model_series                                  |
-| AK      | speed_all_counter                   |             181159 | Nulos → 1                                                                 |
-| AL      | number_of_households                |              19014 | Nulos → moda de hogares de su CP                                          |
-| AM      | purchasing_power_millions_eur       |              19087 | Nulos → moda del poder adquisitivo de su CP                               |
-
-
-### 9.2 Registro de tratamientos aplicados (en orden)
-
-| letra   | columna                             | tratamiento                                                                                                                                                  |   valores afectados |
-|:--------|:------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------:|
-| AA      | zipcode                             | Limpieza previa: CP normalizado ('A-'/'CH-' fuera; texto o 5 dígitos → nulo)                                                                                 |                   5 |
-| AB–AJ   | —                                   | Limpieza previa: valores imposibles (vel. < 1, horas = 0, contadores = 0) → nulo                                                                             |               15529 |
-| AB      | trip_distance_average               | Limpieza previa: winsorización p1–p99 de los observados [2.84, 49.39]                                                                                        |                2340 |
-| AF      | operating_hours_total               | Limpieza previa: winsorización p1–p99 de los observados [0.10, 3,394.76]                                                                                     |                2507 |
-| AG      | fuel_consumption_average            | Limpieza previa: winsorización p1–p99 de los observados [3.59, 19.00]                                                                                        |                2436 |
-| AH      | speed_average                       | Limpieza previa: winsorización p1–p99 de los observados [6.17, 80.50]                                                                                        |                2387 |
-| E       | gender_derived                      | nulo → nueva categoría 'unknown'                                                                                                                             |               33923 |
-| G       | vehicle_type                        | nulo → vehicle_type más frecuente de su model_series                                                                                                         |                 922 |
-| G       | vehicle_type                        | nulo restante (serie sin ningún vehicle_type) → moda global                                                                                                  |                   0 |
-| J       | engine_concept                      | nulo → moda de la columna (COMBUSTION)                                                                                                                       |              134390 |
-| L       | fuel_type                           | nulo → fuel_type más frecuente para su engine_concept (sacado de J): COMBUSTION→DIESEL, ELECTRIC→ELECTRIC, MILD_HYBRID→PETROL, PLUGIN_HYBRID→DIESEL,ELECTRIC |              178745 |
-| M       | date_of_first_registration          | PENDIENTE de decisión ('M?'): provisionalmente mediana de su model_series + flag                                                                             |                4182 |
-| O       | role                                | nulo → OWNER (moda)                                                                                                                                          |                   0 |
-| Q       | months_as_mb_customer               | nulo → 0.0                                                                                                                                                   |                   4 |
-| R       | currently_connected_vehicles        | nulo → 1 (moda)                                                                                                                                              |                   0 |
-| S       | finance_leasing_status              | nulo → never_active                                                                                                                                          |                   0 |
-| D       | age_range                           | sin nulos (solo codificación)                                                                                                                                |                   0 |
-| F       | model_series                        | sin nulos (solo codificación)                                                                                                                                |                   0 |
-| I       | product_group                       | sin nulos (solo codificación)                                                                                                                                |                   0 |
-| K       | country_code                        | sin nulos (solo codificación)                                                                                                                                |                   0 |
-| N       | is_current_vehicle                  | nulo → False                                                                                                                                                 |                   0 |
-| P       | role_type                           | nulo → B2C (moda)                                                                                                                                            |                   0 |
-| U       | consent_phone_communication_channel | nulo → False                                                                                                                                                 |                   0 |
-| V       | consent_epost_communication_channel | nulo → False                                                                                                                                                 |                   0 |
-| W       | consent_post_communication_channel  | nulo → False                                                                                                                                                 |                   0 |
-| T       | workshop_visits_warranty_goodwill   | nulo → moda                                                                                                                                                  |                   0 |
-| AA      | zipcode                             | nulo → CP aleatorio en [mín, máx] del país (AT: 1000–9999, CH: 1000–9999)                                                                                    |               16137 |
-| X       | purchasing_power_per_inhabitant_eur | nulo → media de su CP                                                                                                                                        |                4580 |
-| X       | purchasing_power_per_inhabitant_eur | nulo → media de su serie en su CP                                                                                                                            |                   0 |
-| X       | purchasing_power_per_inhabitant_eur | RESPALDO (no en el documento): mediana de su región CP                                                                                                       |               12521 |
-| X       | purchasing_power_per_inhabitant_eur | RESPALDO (no en el documento): mediana del país                                                                                                              |                1986 |
-| Y       | purchasing_power_per_household_eur  | nulo → media de su CP                                                                                                                                        |                4580 |
-| Y       | purchasing_power_per_household_eur  | RESPALDO (no en el documento): mediana de su región CP                                                                                                       |               12521 |
-| Y       | purchasing_power_per_household_eur  | RESPALDO (no en el documento): mediana del país                                                                                                              |                1986 |
-| Z       | population                          | nulo → media de su CP                                                                                                                                        |                4588 |
-| Z       | population                          | RESPALDO (no en el documento): mediana de su región CP                                                                                                       |               12567 |
-| Z       | population                          | RESPALDO (no en el documento): mediana del país                                                                                                              |                1859 |
-| AL      | number_of_households                | nulo → moda de su CP                                                                                                                                         |                4588 |
-| AL      | number_of_households                | RESPALDO (no en el documento): mediana de su región CP                                                                                                       |               12567 |
-| AL      | number_of_households                | RESPALDO (no en el documento): mediana del país                                                                                                              |                1859 |
-| AM      | purchasing_power_millions_eur       | nulo → moda de su CP                                                                                                                                         |                4580 |
-| AM      | purchasing_power_millions_eur       | RESPALDO (no en el documento): mediana de su región CP                                                                                                       |               12521 |
-| AM      | purchasing_power_millions_eur       | RESPALDO (no en el documento): mediana del país                                                                                                              |                1986 |
-| AB      | trip_distance_average               | nulo → 0                                                                                                                                                     |              185857 |
-| AC      | trip_distance_mode                  | nulo → 0                                                                                                                                                     |              185857 |
-| AD      | trip_distance_median                | nulo → 0                                                                                                                                                     |              185857 |
-| AE      | trip_distance_all_counter           | nulo → 0                                                                                                                                                     |              179830 |
-| AF      | operating_hours_total               | nulo → 0                                                                                                                                                     |              174498 |
-| AG      | fuel_consumption_average            | nulo → 0                                                                                                                                                     |              180725 |
-| AH      | speed_average                       | nulo → velocidad moda (redondeada a 1 km/h) de su model_series                                                                                               |              145603 |
-| AH      | speed_average                       | nulo restante (serie sin datos) → moda global                                                                                                                |               37668 |
-| AI      | speed_mode                          | nulo → moda de AH en su model_series                                                                                                                         |              144714 |
-| AI      | speed_mode                          | nulo restante → moda global de AH                                                                                                                            |               37668 |
-| AJ      | speed_median                        | nulo → mediana de AH en su model_series                                                                                                                      |              144714 |
-| AJ      | speed_median                        | nulo restante → mediana global de AH                                                                                                                         |               37668 |
-| AK      | speed_all_counter                   | nulo → 1                                                                                                                                                     |              181159 |
-
-- CP aleatorios (AA) generados: **16,137**. Solo el **31.6 %** coincide con un CP que existe en el dataset para ese país y el **28.4 %** con un CP con datos socio-demográficos. El resto son códigos inventados que no corresponden a ninguna zona real.
-
-- Los datos socio-demográficos son constantes dentro de cada (país, CP) y ningún CP tiene a la vez filas con dato y filas nulas, así que la regla 'media del CP' no puede rellenar una fila cuyo CP original existe: solo actúa sobre CP aleatorios que coinciden con uno real. Por eso hacen falta los respaldos de región y país.
+| letra   | columna                             |   nulos originales | tratamiento aplicado                                                           |
+|:--------|:------------------------------------|-------------------:|:-------------------------------------------------------------------------------|
+| A       | Unnamed: 0                          |                  0 | Quitar (ruido)                                                                 |
+| B       | client_id                           |                  0 | Quitar (ruido) · se conserva solo como clave                                   |
+| C       | vehicle_id                          |                  0 | Quitar (ruido) · se conserva solo como clave                                   |
+| D       | age_range                           |                  0 | Sin nulos                                                                      |
+| E       | gender_derived                      |              33923 | Nulos → 'unknown'                                                              |
+| F       | model_series                        |                  0 | Sin nulos                                                                      |
+| G       | vehicle_type                        |                922 | Nulos → moda de su model_series                                                |
+| H       | model_class                         |               3369 | Quitar (ruido): función exacta de F                                            |
+| I       | product_group                       |                  0 | Sin nulos                                                                      |
+| J       | engine_concept                      |             134390 | Nulos → cascada validada (nombre, serie, año) → moda de la serie → moda global |
+| K       | country_code                        |                  0 | Sin nulos                                                                      |
+| L       | fuel_type                           |             178745 | Nulos → derivado de J + nombre comercial                                       |
+| M       | date_of_first_registration          |               4182 | PENDIENTE (?): provisional mediana de su serie + flag                          |
+| N       | is_current_vehicle                  |                  0 | Nulos → False                                                                  |
+| O       | role                                |                  0 | Nulos → OWNER (moda)                                                           |
+| P       | role_type                           |                  0 | Nulos → B2C (moda)                                                             |
+| Q       | months_as_mb_customer               |                  4 | Nulos → 0.0                                                                    |
+| R       | currently_connected_vehicles        |                  0 | Nulos → 1 (moda)                                                               |
+| S       | finance_leasing_status              |                  0 | Nulos → never_active                                                           |
+| T       | workshop_visits_warranty_goodwill   |                  0 | Nulos → moda                                                                   |
+| U       | consent_phone_communication_channel |                  0 | Nulos → False                                                                  |
+| V       | consent_epost_communication_channel |                  0 | Nulos → False                                                                  |
+| W       | consent_post_communication_channel  |                  0 | Nulos → False                                                                  |
+| X       | purchasing_power_per_inhabitant_eur |              19087 | Valor de su CP · respaldo mediana región/país                                  |
+| Y       | purchasing_power_per_household_eur  |              19087 | Valor de su CP · si no, recalculado = AM×1e6/AL                                |
+| Z       | population                          |              19014 | Valor de su CP · respaldo mediana región/país                                  |
+| AA      | zipcode                             |              16135 | Nulos → CP real del país sorteado (ponderado, uno por cliente)                 |
+| AB      | trip_distance_average               |             185857 | Sin telemetría → 0 · parcial → mediana de su serie                             |
+| AC      | trip_distance_mode                  |             179830 | Sin telemetría → '0' · parcial → moda de su serie                              |
+| AD      | trip_distance_median                |             179830 | Sin telemetría → 0 · parcial → mediana de su serie                             |
+| AE      | trip_distance_all_counter           |             179830 | Sin telemetría → 0 · parcial → mediana de su serie                             |
+| AF      | operating_hours_total               |             174358 | Sin telemetría → 0 · parcial → mediana de su serie                             |
+| AG      | fuel_consumption_average            |             180725 | Sin telemetría → 0 · parcial → 0 si ELECTRIC, si no mediana de su serie        |
+| AH      | speed_average                       |             182382 | Sin telemetría → 0 · parcial → velocidad moda de su serie                      |
+| AI      | speed_mode                          |             181159 | Sin telemetría → '0' · parcial → moda de su serie                              |
+| AJ      | speed_median                        |             181159 | Sin telemetría → 0 · parcial → mediana de su serie                             |
+| AK      | speed_all_counter                   |             181159 | Sin telemetría → 0 · parcial → mediana de su serie                             |
+| AL      | number_of_households                |              19014 | Valor de su CP · si no, = población / tamaño medio del hogar de la región      |
+| AM      | purchasing_power_millions_eur       |              19087 | Valor de su CP · si no, = X × Z / 1e6                                          |
 
 
-### 9.3 Fiabilidad de reglas de motorización medida sobre filas con dato conocido
+### 9.3 Validación de las reglas de motorización sobre filas con dato conocido
 
-| regla                                                           |   filas evaluables |   acierto % |
-|:----------------------------------------------------------------|-------------------:|------------:|
-| Nombre EQ*/electric → ELECTRIC; 'e'/'de'/Hybrid → PLUGIN_HYBRID |              37363 |       99.49 |
-| Matriculado ≤ 2018 y sin nombre eléctrico → COMBUSTION          |              35741 |       99.18 |
-| Moda global (COMBUSTION) asignada a cualquier fila              |             168460 |       58.43 |
+| regla                                                                            |   filas evaluables |   acierto % |
+|:---------------------------------------------------------------------------------|-------------------:|------------:|
+| Nombre EQ*/electric → ELECTRIC; 'e'/'de'/Hybrid → PLUGIN_HYBRID                  |              37363 |       99.49 |
+| Matriculado ≤ 2018 y sin nombre eléctrico → COMBUSTION                           |              35741 |       99.18 |
+| Combustible derivado de engine_concept + nombre (PETROL_PLUS cuenta como PETROL) |             124105 |      100.00 |
+| Restricción: consumo de combustible medido ⇒ no ELECTRIC                         |              67018 |      100.00 |
+| (Referencia) moda global COMBUSTION para cualquier fila                          |             168460 |       58.43 |
 
-
-### 9.4 Filas con engine_concept nulo (todas imputadas como COMBUSTION): qué indican las reglas validadas
-
-| motorización que indican las reglas validadas (filas con J nulo)   |     filas |     % |
-|:-------------------------------------------------------------------|----------:|------:|
-| COMBUSTION                                                         | 69,470.00 | 51.69 |
-| indeterminado                                                      | 29,543.00 | 21.98 |
-| MILD_HYBRID                                                        | 18,154.00 | 13.51 |
-| PLUGIN_HYBRID                                                      |  9,266.00 |  6.89 |
-| ELECTRIC                                                           |  7,957.00 |  5.92 |
+- Clientes sin CP: **14,466**. Todos reciben un CP real con datos: **100.0 %** de CP existentes (frente al 31,6 % del sorteo uniforme entre el mínimo y el máximo).
 
 
-### 9.5 Distribución de engine_concept: original / decisión del equipo / alternativa
+### 9.6 Registro de tratamientos aplicados (en orden)
 
-|               |   % original (sobre conocidos) |   % tras moda (decisión equipo) |   % con cascada validada (alternativa) |
-|:--------------|-------------------------------:|--------------------------------:|---------------------------------------:|
-| COMBUSTION    |                          58.43 |                           76.87 |                                  55.44 |
-| MILD_HYBRID   |                          16.48 |                            9.16 |                                  15.16 |
-| PLUGIN_HYBRID |                          12.67 |                            7.05 |                                  10.11 |
-| ELECTRIC      |                          12.43 |                            6.92 |                                   9.54 |
-| UNKNOWN       |                         nan    |                          nan    |                                   9.75 |
+| letra   | columna                             | tratamiento                                                                  |   valores |
+|:--------|:------------------------------------|:-----------------------------------------------------------------------------|----------:|
+| AA      | zipcode                             | CP normalizado ('A-'/'CH-' fuera; texto o 5 dígitos → nulo)                  |         5 |
+| Z/AL    | —                                   | population = 0 (CP sin residentes) → zona sin datos                          |        73 |
+| AB–AK   | —                                   | valores imposibles (vel. < 1, horas = 0, contadores = 0 con métricas) → nulo |     22779 |
+| AB      | trip_distance_average               | winsorización p1–p99 de los observados [2.84; 49.39]                         |      2340 |
+| AF      | operating_hours_total               | winsorización p1–p99 de los observados [0.10; 3,394.76]                      |      2507 |
+| AG      | fuel_consumption_average            | winsorización p1–p99 de los observados [3.59; 19.00]                         |      2436 |
+| AH      | speed_average                       | winsorización p1–p99 de los observados [6.17; 80.50]                         |      2387 |
+| E       | gender_derived                      | nulo → nueva categoría 'unknown'                                             |     33923 |
+| G       | vehicle_type                        | nulo → vehicle_type más frecuente de su model_series                         |       922 |
+| J       | engine_concept                      | nulo → vehicle_type con ≥ 90 % de consistencia                               |     63856 |
+| J       | engine_concept                      | nulo → nombre comercial (EQ*, e/de, Hybrid)                                  |      8967 |
+| J       | engine_concept                      | nulo → model_series con ≥ 90 % de consistencia                               |     21216 |
+| J       | engine_concept                      | nulo → matriculado ≤ 2018 → COMBUSTION                                       |     10819 |
+| J       | engine_concept                      | nulo → moda de su model_series                                               |     23885 |
+| J       | engine_concept                      | nulo → moda global (COMBUSTION)                                              |      5647 |
+| L       | fuel_type                           | nulo → derivado de engine_concept + nombre comercial                         |    178745 |
+| M       | date_of_first_registration          | PENDIENTE: provisional mediana de su model_series (+ flag)                   |      4182 |
+| Q       | months_as_mb_customer               | nulo → 0.0                                                                   |         4 |
+| AA      | zipcode                             | nulo → CP real del país sorteado (ponderado, uno por cliente)                |     16137 |
+| X       | purchasing_power_per_inhabitant_eur | nulo → valor de su CP                                                        |     16140 |
+| Y       | purchasing_power_per_household_eur  | nulo → valor de su CP                                                        |     16140 |
+| Z       | population                          | nulo → valor de su CP                                                        |     16140 |
+| AL      | number_of_households                | nulo → valor de su CP                                                        |     16140 |
+| AM      | purchasing_power_millions_eur       | nulo → valor de su CP                                                        |     16140 |
+| X       | purchasing_power_per_inhabitant_eur | CP sin datos → mediana de su región                                          |      2856 |
+| X       | purchasing_power_per_inhabitant_eur | CP sin datos → mediana del país                                              |        91 |
+| Z       | population                          | CP sin datos → mediana de su región                                          |      2856 |
+| Z       | population                          | CP sin datos → mediana del país                                              |        91 |
+| AL      | number_of_households                | CP sin datos → población / tamaño medio del hogar de la región               |      2947 |
+| AM      | purchasing_power_millions_eur       | CP sin datos → X × Z / 1e6                                                   |      2947 |
+| Y       | purchasing_power_per_household_eur  | CP sin datos → AM × 1e6 / AL                                                 |      2947 |
+| AB      | trip_distance_average               | sin telemetría → 0                                                           |    158185 |
+| AC      | trip_distance_mode                  | sin telemetría → 0                                                           |    158185 |
+| AD      | trip_distance_median                | sin telemetría → 0                                                           |    158185 |
+| AE      | trip_distance_all_counter           | sin telemetría → 0                                                           |    158185 |
+| AF      | operating_hours_total               | sin telemetría → 0                                                           |    158185 |
+| AG      | fuel_consumption_average            | sin telemetría → 0                                                           |    158185 |
+| AH      | speed_average                       | sin telemetría → 0                                                           |    158185 |
+| AI      | speed_mode                          | sin telemetría → 0                                                           |    158185 |
+| AJ      | speed_median                        | sin telemetría → 0                                                           |    158185 |
+| AK      | speed_all_counter                   | sin telemetría → 0                                                           |    158185 |
+| AG      | fuel_consumption_average            | parcial y ELECTRIC → 0                                                       |     12697 |
+| AB      | trip_distance_average               | parcial → mediana de su serie                                                |     21232 |
+| AB      | trip_distance_average               | parcial → valor global (serie sin datos)                                     |      6440 |
+| AC      | trip_distance_mode                  | parcial → moda de su serie                                                   |     21232 |
+| AC      | trip_distance_mode                  | parcial → valor global (serie sin datos)                                     |      6440 |
+| AD      | trip_distance_median                | parcial → mediana de su serie                                                |     21232 |
+| AD      | trip_distance_median                | parcial → valor global (serie sin datos)                                     |      6440 |
+| AE      | trip_distance_all_counter           | parcial → mediana de su serie                                                |     21232 |
+| AE      | trip_distance_all_counter           | parcial → valor global (serie sin datos)                                     |      6440 |
+| AF      | operating_hours_total               | parcial → mediana de su serie                                                |      3676 |
+| AF      | operating_hours_total               | parcial → valor global (serie sin datos)                                     |     12637 |
+| AG      | fuel_consumption_average            | parcial → mediana de su serie                                                |      9744 |
+| AG      | fuel_consumption_average            | parcial → valor global (serie sin datos)                                     |        99 |
+| AH      | speed_average                       | parcial → velocidad moda de su serie                                         |     12342 |
+| AH      | speed_average                       | parcial → valor global (serie sin datos)                                     |     12744 |
+| AI      | speed_mode                          | parcial → moda de su serie                                                   |     11453 |
+| AI      | speed_mode                          | parcial → valor global (serie sin datos)                                     |     12744 |
+| AJ      | speed_median                        | parcial → mediana de su serie                                                |     11453 |
+| AJ      | speed_median                        | parcial → valor global (serie sin datos)                                     |     12744 |
+| AK      | speed_all_counter                   | parcial → mediana de su serie                                                |     11453 |
+| AK      | speed_all_counter                   | parcial → valor global (serie sin datos)                                     |     12744 |
 
 
-### 9.6 fuel_type tras el tratamiento (filas)
+### 10.1 Comprobaciones de coherencia (objetivo: 0)
 
-| fuel_type            |   filas |
-|:---------------------|--------:|
-| DIESEL               |  214198 |
-| PETROL               |   32397 |
-| ELECTRIC             |   20944 |
-| PETROL_PLUS          |   13974 |
-| DIESEL,ELECTRIC      |    9015 |
-| PETROL,ELECTRIC      |    7371 |
-| PETROL_PLUS,ELECTRIC |    4951 |
-
-
-### 9.7 Impacto del relleno en las variables numéricas
-
-| columna                             |   media antes (observados) |   media después |   mediana antes |   mediana después |   % filas = 0 después |   % filas imputadas |
-|:------------------------------------|---------------------------:|----------------:|----------------:|------------------:|----------------------:|--------------------:|
-| trip_distance_average               |                      15.94 |            6.16 |           14.02 |              0.00 |                 61.37 |               61.37 |
-| trip_distance_median                |                       6.86 |            2.65 |            7.50 |              0.00 |                 61.37 |               61.37 |
-| trip_distance_all_counter           |                   2,351.70 |          955.28 |        1,593.00 |              0.00 |                 61.37 |               59.38 |
-| operating_hours_total               |                     605.71 |          256.71 |          407.25 |              0.00 |                 57.62 |               57.62 |
-| fuel_consumption_average            |                       8.48 |            3.42 |            8.11 |              0.00 |                 59.67 |               59.67 |
-| speed_average                       |                      48.97 |           49.29 |           49.43 |             50.00 |                  0.00 |               60.52 |
-| speed_median                        |                      43.06 |           46.85 |           50.00 |             49.74 |                  0.00 |               60.22 |
-| speed_all_counter                   |               2,530,486.84 |    1,016,799.26 |    1,698,968.30 |              1.00 |                  0.40 |               59.82 |
-| purchasing_power_per_inhabitant_eur |                  46,481.17 |       46,116.85 |       46,165.64 |         45,666.39 |                  0.00 |                6.30 |
-| population                          |                  19,664.85 |       18,774.12 |        7,132.00 |          6,610.00 |                  0.06 |                6.28 |
-
-- Con la regla AG (consumo nulo → 0) los **20,944** vehículos eléctricos pasan a tener consumo 0 l/100 km (coherente: no gastan combustible) y quedan mezclados con los vehículos térmicos sin telemetría, que también valen 0.
+|                                                                                           |   incumplimientos |
+|:------------------------------------------------------------------------------------------|------------------:|
+| Nulos en cualquier columna (celdas)                                                       |                 0 |
+| Clientes con atributos de cliente distintos entre sus filas (incl. CP y socio-demografía) |                 0 |
+| Vehículos con atributos de vehículo distintos entre sus filas                             |                 0 |
+| (país, CP) con más de un valor socio-demográfico                                          |                 0 |
+| CP imputados que no existen en el país                                                    |                 0 |
+| PA total ≠ PA/hab × población / 1e6 (error > 0,1 %)                                       |                 0 |
+| PA/hogar ≠ PA total × 1e6 / hogares (error > 0,1 %)                                       |                 0 |
+| Motor y combustible incompatibles                                                         |                 0 |
+| Vehículos con nombre eléctrico (EQ…) imputados como no eléctricos                         |                 0 |
+| Turismos con nombre de gasolina imputados como DIESEL                                     |                 0 |
+| Sin telemetría pero con alguna métrica ≠ 0                                                |                 0 |
+| Con telemetría pero con alguna métrica básica = 0                                         |                 0 |
+| Con telemetría, no eléctrico y consumo = 0                                                |                 0 |
+| Eléctricos con consumo de combustible > 0                                                 |                 0 |
+| Modas/medianas que no son un bin válido                                                   |                 0 |
 
 
-### 9.8 Nulos que quedan tras el tratamiento
+### 10.2 engine_concept: original, moda y tratamiento final
 
-|                   |   nulos |
-|:------------------|--------:|
-| (ninguna columna) |       0 |
+| engine_concept   |   % original (sobre conocidos) |   % con la moda (regla original J) |   % tratamiento final |
+|:-----------------|-------------------------------:|-----------------------------------:|----------------------:|
+| COMBUSTION       |                           58.4 |                               76.9 |                  61.4 |
+| MILD_HYBRID      |                           16.5 |                                9.2 |                  16.5 |
+| PLUGIN_HYBRID    |                           12.7 |                                7.0 |                  12.5 |
+| ELECTRIC         |                           12.4 |                                6.9 |                   9.6 |
 
-- Columnas eliminadas por ruido: `Unnamed: 0`, `model_class`. `client_id`, `vehicle_id` también son ruido para el modelo, pero se conservan en el fichero **solo como claves** (sin ellas no se puede agregar por cliente). No deben entrar como features.
+
+### 10.3 Origen del valor final de engine_concept
+
+| engine_concept_source   |   filas |
+|:------------------------|--------:|
+| original                |  168460 |
+| lookup_vehicle_type     |   63856 |
+| moda_serie              |   23885 |
+| lookup_model_series     |   21216 |
+| regla_antiguedad        |   10819 |
+| regla_nombre            |    8967 |
+| moda_global             |    5647 |
 
 
-### 9.9 Vista agregada a nivel cliente (data/processed/clientes.parquet)
+### 10.4 fuel_type (agrupado): original frente a tratamiento final
+
+| fuel_type   |   % original (sobre conocidos) |   % tratamiento final |
+|:------------|-------------------------------:|----------------------:|
+| PETROL      |                           37.3 |                  34.6 |
+| DIESEL      |                           28.9 |                  43.2 |
+| ELECTRIC    |                           16.9 |                   9.6 |
+| PHEV        |                           16.9 |                  12.5 |
+
+
+### 10.5 Medianas antes y después (en telemetría, solo sobre filas con telemetría)
+
+| columna                             |   mediana observada |   mediana final (filas con dato) |   % filas imputadas |
+|:------------------------------------|--------------------:|---------------------------------:|--------------------:|
+| trip_distance_average               |               14.02 |                            14.02 |               61.37 |
+| operating_hours_total               |              407.25 |                           407.25 |               57.62 |
+| fuel_consumption_average            |                8.11 |                             7.80 |               59.67 |
+| speed_average                       |               49.43 |                            50.00 |               60.52 |
+| purchasing_power_per_inhabitant_eur |           46,165.64 |                        45,740.45 |                6.30 |
+| population                          |            7,132.00 |                         7,116.00 |                6.30 |
+
+
+### 10.6 Vista agregada por cliente (data/processed/clientes.csv)
 
 |                                     |      count |   unique |      mean |       std |       min |       25% |       50% |       75% |        max |
 |:------------------------------------|-----------:|---------:|----------:|----------:|----------:|----------:|----------:|----------:|-----------:|
@@ -816,8 +826,8 @@
 | consent_phone_communication_channel | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
 | consent_epost_communication_channel | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
 | consent_post_communication_channel  | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| purchasing_power_per_inhabitant_eur | 173,456.00 |   nan    | 46,629.22 | 16,986.01 | 19,701.53 | 31,768.16 | 46,569.40 | 54,183.33 | 148,353.74 |
-| population                          | 173,456.00 |   nan    | 18,636.73 | 35,940.16 |      0.00 |  2,576.00 |  6,385.00 | 17,592.00 | 220,794.00 |
+| purchasing_power_per_inhabitant_eur | 173,456.00 |   nan    | 46,893.74 | 17,276.80 | 19,701.53 | 31,940.06 | 46,636.14 | 54,450.82 | 148,353.74 |
+| population                          | 173,456.00 |   nan    | 20,351.39 | 37,662.54 |     25.00 |  3,114.00 |  7,354.00 | 18,605.00 | 220,794.00 |
 | socio_imputed                       | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
 | zip_imputed                         | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
 | n_relaciones                        | 173,456.00 |   nan    |      1.75 |      5.51 |      1.00 |      1.00 |      1.00 |      2.00 |     561.00 |
@@ -825,9 +835,9 @@
 | share_owner                         | 173,456.00 |   nan    |      0.88 |      0.30 |      0.00 |      1.00 |      1.00 |      1.00 |       1.00 |
 | visitas_taller_total                | 173,456.00 |   nan    |      3.06 |      4.70 |      0.00 |      0.00 |      2.00 |      4.00 |     206.00 |
 | edad_vehiculo_actual_media          | 155,408.00 |   nan    |      4.72 |      3.01 |      0.04 |      2.33 |      4.33 |      6.71 |      39.75 |
-| share_electrificado_actual          | 155,408.00 |   nan    |      0.16 |      0.36 |      0.00 |      0.00 |      0.00 |      0.00 |       1.00 |
+| share_electrificado_actual          | 155,408.00 |   nan    |      0.25 |      0.42 |      0.00 |      0.00 |      0.00 |      0.50 |       1.00 |
 | has_telemetry                       | 173,456.00 |     2.00 |    nan    |    nan    |    nan    |    nan    |    nan    |    nan    |     nan    |
-| trip_distance_average               | 173,456.00 |   nan    |      6.99 |      9.08 |      0.00 |      0.00 |      0.00 |     12.40 |      49.39 |
-| operating_hours_total               | 173,456.00 |   nan    |    316.96 |    513.94 |      0.00 |      0.00 |     29.89 |    470.50 |   3,394.76 |
-| fuel_consumption_average            | 173,456.00 |   nan    |      3.83 |      4.23 |      0.00 |      0.00 |      2.58 |      7.38 |      19.00 |
-| speed_average                       | 173,456.00 |   nan    |     49.25 |      8.57 |      6.00 |     46.34 |     50.00 |     52.00 |      80.50 |
+| trip_distance_average               | 173,456.00 |   nan    |      9.32 |      9.51 |      0.00 |      0.00 |      9.58 |     15.22 |      49.39 |
+| operating_hours_total               | 173,456.00 |   nan    |    369.43 |    532.59 |      0.00 |      0.00 |    142.06 |    530.16 |   3,394.76 |
+| fuel_consumption_average            | 173,456.00 |   nan    |      4.50 |      4.47 |      0.00 |      0.00 |      5.46 |      8.14 |      19.00 |
+| speed_average                       | 173,456.00 |   nan    |     29.32 |     25.71 |      0.00 |      0.00 |     39.39 |     50.45 |      80.50 |
