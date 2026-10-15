@@ -36,29 +36,33 @@ sigue `Descripcion_uso_de_datos`, con correcciones de coherencia: el dataset tra
 comprobaciones de coherencia (por cliente, por vehículo, zona, motor y combustible, telemetría).
 
 **Features (reto 2).** Se modela a nivel cliente. Las 833 cuentas con más de 20 relaciones (concesionarios o flotas)
-se apartan como segmento propio. Se usan 14 features de modelo sobre perfil, relación con la marca, gama, energía,
+se apartan como segmento propio. Se usan 13 features de modelo sobre perfil, relación con la marca, gama, energía,
 antigüedad del vehículo y mantenimiento, con log1p y `StandardScaler` dentro de un `Pipeline`. La telemetría y el país se
-usan solo para describir los segmentos: con ellos dentro, el clustering separaba "con datos" de "sin datos".
+usan solo para describir los segmentos: con ellos dentro, el clustering separaba "con datos" de "sin datos". La binaria
+`tiene_vehiculo_actual` se eliminó por redundante con `n_vehiculos_actuales` (0 = sin vehículo actual), que duplicaba
+el peso de esa dimensión.
 
-**Modelo (reto 3).** K-Means con k = 2…10. Se elige **k = 7**: el mejor silhouette dentro del rango útil para
-negocio (0,188) y el mejor Davies-Bouldin (1,63).
+**Modelo (reto 3).** K-Means con k = 2…10. Se elige **k = 8**: el mejor silhouette dentro del rango útil para
+negocio (0,163) y el mejor Davies-Bouldin (1,74).
 
 **Segmentos (reto 4).**
 
 | Segmento | % clientes | En una frase | Acción |
 |---|---:|---|---|
-| Compacto clásico al contado | 33,0 | A/B/C de unos 6 años, sin financiación | Mantenimiento fuera de garantía y renovación con financiación |
-| Familia SUV híbrida | 20,5 | GLC/GLE, casi la mitad electrificada | Paso a SUV eléctrico, accesorios y servicio de híbridos |
-| Urbano en leasing | 12,5 | 100 % leasing, compactos nuevos, 20 % BEV | Renovación anticipada al vencer el contrato, upgrade a EQ |
-| Entusiasta AMG | 10,2 | Flota casi solo AMG, joven y suizo | Experiencias y eventos AMG, mantenimiento premium |
-| Ex-cliente por recuperar | 9,9 | Sin vehículo actual | Campaña de recuperación (ocasión certificada o leasing) |
-| Profesional de furgoneta | 9,3 | V-Class, Vito o Sprinter, varios vehículos | Paquetes de taller prioritario, eVans |
+| Compacto al contado | 20,2 | A, B/GLA/GLB o CLA de unos 5 años, sin financiación | Renovación a compacto nuevo o EQA/EQB con financiación |
+| Berlina clásica al contado | 18,4 | C/E y algo de GLC, unos 7 años, sin financiación ni electrificación | Mantenimiento fuera de garantía y renovación con financiación |
+| Familia SUV híbrida | 15,9 | GLC/GLE, casi dos tercios electrificada | Paso a SUV eléctrico, accesorios y servicio de híbridos |
+| Urbano financiado | 12,4 | 100 % leasing, compactos nuevos, 19 % BEV | Renovación anticipada al vencer el contrato, upgrade a EQ |
+| Entusiasta AMG | 10,5 | Flota casi solo AMG, joven y suizo | Experiencias y eventos AMG, mantenimiento premium |
+| Trabajador profesional que utiliza furgoneta | 9,8 | V-Class, Vito o Sprinter | Paquetes de taller prioritario, eVans |
+| Ex-cliente por recuperar | 8,0 | Sin vehículo actual | Campaña de recuperación (ocasión certificada o leasing) |
 | Élite eléctrica y lujo | 4,2 | EQE/EQS, Clase S, AMG GT; la mitad BEV; zona más rica | Gestor dedicado, acceso preferente |
 | Flota / Profesional | 0,5 | Más de 20 relaciones | Gestión B2B |
 
 **Avanzados.**
-1. K-Means tiene el mejor silhouette (0,188) frente a MiniBatch, GMM, Ward y Birch. GMM (ARI 0,70) y Ward (ARI 0,74)
-   reproducen los segmentos fuertes. DBSCAN no encaja con estos datos.
+1. K-Means tiene el mejor silhouette (0,163) frente a MiniBatch, GMM, Ward y Birch. GMM (ARI 0,47) y Ward (ARI 0,53)
+   reproducen los segmentos fuertes (furgoneta, élite, SUV) y fusionan Berlina clásica con Compacto. DBSCAN no encaja con estos datos.
 2. PCA: hacen falta 8 componentes para explicar el 80 % de la varianza. En 2D solo los ex-clientes se separan con claridad.
-3. Jackknife (20 submuestras, excluyendo el 15 % cada vez): ARI medio de 0,85. Cuatro segmentos son muy estables
-   (Jaccard ≥ 0,94). La frontera entre Compacto clásico, Urbano en leasing y AMG es la menos estable.
+3. Jackknife (20 submuestras, excluyendo el 15 % cada vez): ARI medio de 0,69. Cinco segmentos son estables o muy estables
+   (Furgoneta, Élite, AMG, Urbano financiado: Jaccard ≥ 0,91; Familia SUV: 0,76). Berlina clásica, Compacto al contado y
+   Ex-cliente son inestables (Jaccard ≈ 0,53–0,55): la frontera entre ellos es la menos estable.

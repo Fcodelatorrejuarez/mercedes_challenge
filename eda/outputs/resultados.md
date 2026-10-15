@@ -834,7 +834,6 @@
 | n_relaciones                        | 173,456.00 |   nan    |       1.75 |      5.51 |      1.00 |      1.00 |       1.00 |       2.00 |     561.00 |
 | n_vehiculos_distintos               | 173,456.00 |   nan    |       1.75 |      5.51 |      1.00 |      1.00 |       1.00 |       2.00 |     561.00 |
 | n_relaciones_historicas             | 173,456.00 |   nan    |       0.71 |      5.22 |      0.00 |      0.00 |       0.00 |       1.00 |     547.00 |
-| tiene_vehiculo_actual               | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
 | is_b2b                              | 173,456.00 |     2.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
 | share_owner                         | 173,456.00 |   nan    |       0.88 |      0.30 |      0.00 |      1.00 |       1.00 |       1.00 |       1.00 |
 | rol_principal                       | 173,456.00 |     5.00 |     nan    |    nan    |    nan    |    nan    |     nan    |     nan    |     nan    |
