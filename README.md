@@ -1,2 +1,3 @@
-# mercedes_challenge
-Los rumanillos
+# Reto de mercedes 
+
+En este documento se detallaran las especificaciones del reto planteado.
