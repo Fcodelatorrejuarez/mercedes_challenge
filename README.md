@@ -50,7 +50,7 @@ negocio (0,188) y el mejor Davies-Bouldin (1,63).
 | Compacto clásico al contado | 33,0 | A/B/C de unos 6 años, sin financiación | Mantenimiento fuera de garantía y renovación con financiación |
 | Familia SUV híbrida | 20,5 | GLC/GLE, casi la mitad electrificada | Paso a SUV eléctrico, accesorios y servicio de híbridos |
 | Urbano en leasing | 12,5 | 100 % leasing, compactos nuevos, 20 % BEV | Renovación anticipada al vencer el contrato, upgrade a EQ |
-| Entusiasta AMG | 10,2 | Parque casi solo AMG, joven y suizo | Experiencias y eventos AMG, mantenimiento premium |
+| Entusiasta AMG | 10,2 | Flota casi solo AMG, joven y suizo | Experiencias y eventos AMG, mantenimiento premium |
 | Ex-cliente por recuperar | 9,9 | Sin vehículo actual | Campaña de recuperación (ocasión certificada o leasing) |
 | Profesional de furgoneta | 9,3 | V-Class, Vito o Sprinter, varios vehículos | Paquetes de taller prioritario, eVans |
 | Élite eléctrica y lujo | 4,2 | EQE/EQS, Clase S, AMG GT; la mitad BEV; zona más rica | Gestor dedicado, acceso preferente |
