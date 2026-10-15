@@ -1,0 +1,20 @@
+
+
+QUITAR RUIDO:
+
+A,B,C,H
+
+
+Directo:
+T(Nulos Mod)
+X(Nul:Media cod Postal o media que tengo que se haya comprado misma serie de vehiculo en el mismo cod postal)
+Y(Nul:media Cod postal)
+Z(Nul:media Cod postal)
+
+Label Coder:
+
+D,E(valores nulos nueva categoria),F,G(nulos los tratamos asignando la moda del model_serie),I(umbrales),J(moda),K(puede haber varios paises),L(sacar a partir de J),M?,O(null owner,moda columna),Q(Nul=0.0),R(Null:1,Mo),S(Null:never_active),
+
+One hot encoding
+N(null False),P(null B2C sacar a partir de moda),U(Null:False),V(Null:False),W(Null:false)
+
