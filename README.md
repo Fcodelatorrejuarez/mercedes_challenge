@@ -19,7 +19,7 @@ CSV que genera el anterior (todos en `data/processed/`).
 
 | Reto | Notebook | Genera |
 |---|---|---|
-| Básico 1: EDA y calidad | [`eda/EDA_reto1.ipynb`](eda/EDA_reto1.ipynb) · resumen en [`eda/Resumen_reto1.md`](eda/Resumen_reto1.md) | `relaciones_limpio.csv`, `clientes.csv` |
+| Básico 1: EDA y calidad | [`eda/EDA_reto1.ipynb`](eda/EDA_reto1.ipynb) · resumen en [`eda/Resumen_reto1.md`](modelo/Resumen_reto1.md) | `relaciones_limpio.csv`, `clientes.csv` |
 | Básico 2: feature engineering | [`modelo/Reto2_Feature_Engineering.ipynb`](modelo/Reto2_Feature_Engineering.ipynb) | `features_modelo.csv`, `clientes_modelo.csv` |
 | Básico 3: K-Means | [`modelo/Reto3_KMeans.ipynb`](modelo/Reto3_KMeans.ipynb) | `segmentos_kmeans.csv`, `centroides_kmeans.csv`, `metricas_kmeans.csv` |
 | Básico 4: perfilado | [`modelo/Reto4_Perfilado_Segmentos.ipynb`](modelo/Reto4_Perfilado_Segmentos.ipynb) | `clientes_segmentados.csv`, `nombres_segmentos.csv` |

@@ -1,6 +1,6 @@
 # Reto 1: resumen de hallazgos y conclusiones
 
-El análisis completo está en el notebook [`EDA_reto1.ipynb`](EDA_reto1.ipynb). El dataset tiene 302.850 filas,
+El análisis completo está en el notebook [`EDA_reto1.ipynb`](../eda/EDA_reto1.ipynb). El dataset tiene 302.850 filas,
 **173.456 clientes** y 244.519 vehículos de Suiza y Austria. Cada fila es una relación **cliente–vehículo**, así que
 para segmentar hay que agregar por cliente.
 
