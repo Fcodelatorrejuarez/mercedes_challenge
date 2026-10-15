@@ -14,6 +14,19 @@ Z(Nul:media Cod postal)
 Label Coder:
 
 D,E(valores nulos nueva categoria),F,G(nulos los tratamos asignando la moda del model_serie),I(umbrales),J(moda),K(puede haber varios paises),L(sacar a partir de J),M?,O(null owner,moda columna),Q(Nul=0.0),R(Null:1,Mo),S(Null:never_active),
+AA {nulos numeros aleatorios entre min y max de los de dentro del pais}
+AB {nulos 0}
+AC {nulos 0}
+AD {nulos 0}
+AE {nulos 0}
+AF {nulos 0}
+AG {nulos 0}
+AH {nulos velocidad asociada a la moda de ese modelo de serie}
+AI {nulos moda de la columna AH asociado a ese modelo de serie}
+AJ {nulos mediana de la columna AH asociado a ese modelo de serie}
+AK {nulos 1}
+AL {moda del numero de casas asociado a ese codigo postal}
+AM {moda del poder adquisitivo asociado a ese codigo postal}
 
 One hot encoding
 N(null False),P(null B2C sacar a partir de moda),U(Null:False),V(Null:False),W(Null:false)
